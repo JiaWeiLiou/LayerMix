@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include "basic_processing.h"
 #include <iostream>
 #include <opencv2/opencv.hpp>  
 #include <cmath>
@@ -11,10 +12,6 @@
 
 using namespace std;
 using namespace cv;
-
-void LayerMix(InputArray _grayImage, InputArray _blurImage, OutputArray _mixImage);
-void Differential(InputArray _grayImage, OutputArray _grad_x, OutputArray _grad_y, OutputArray _grad_mag);
-void DrawAbsGraySystem(InputArray _field, OutputArray _grayField);
 
 int main()
 {
@@ -66,99 +63,89 @@ int main()
 
 	/*基於面的圖層混合模式*/
 
-	Mat mixImageArea;
-	LayerMix(grayImage, blurImage, mixImageArea);
-	string lmaOutfile = filepath + "\\" + infilename + "_LMA.png";			//基於面的圖層混合模式
-	imwrite(lmaOutfile, mixImageArea);
+	Mat divideArea;
+	Divide(grayImage, blurImage, divideArea);
+
+	string divideaOutfile = filepath + "\\" + infilename + "_DIVIDEA.png";			//基於面的圖層混合模式
+	imwrite(divideaOutfile, divideArea);
+
+	Mat hardmixArea;
+	HardMix(grayImage, divideArea, hardmixArea);
+
+	string hardmixaOutfile = filepath + "\\" + infilename + "_HARDMIXA.png";			//基於面的圖層混合模式
+	imwrite(hardmixaOutfile, hardmixArea);
+
+	/*去除影像雜訊*/
+
+	Mat clearWiteArea,clearBlackArea;
+	ClearNoise(hardmixArea, clearWiteArea, 20, 4, 1);
+
+	string clearwOutfile = filepath + "\\" + infilename + "_CLEARW.png";			//基於面的圖層混合模式
+	imwrite(clearwOutfile, clearWiteArea);
+
+	ClearNoise(clearWiteArea, clearBlackArea, 20, 4, 0);
+
+	string clearbOutfile = filepath + "\\" + infilename + "_CLEARB.png";			//基於面的圖層混合模式
+	imwrite(clearbOutfile, clearBlackArea);
 
 	/*計算影像梯度*/
-	Mat gradx,grady,gradm;
-	Differential(grayImage, gradx, grady, gradm);
-	DrawAbsGraySystem(gradx, gradx);
-	DrawAbsGraySystem(grady, grady);
-	DrawAbsGraySystem(gradm, gradm);
 
-	string gxOutfile = filepath + "\\" + infilename + "_Gx.png";			//影像梯度(水平)
-	imwrite(gxOutfile, gradx);
-	string gyOutfile = filepath + "\\" + infilename + "_Gy.png";			//影像梯度(垂直)
-	imwrite(gyOutfile, grady);
-	string gmOutfile = filepath + "\\" + infilename + "_Gm.png";			//影像梯度(幅值)
-	imwrite(gmOutfile, gradm);
+	Mat gradx,grady;		//16SC1
+	Differential(grayImage, gradx, grady);
 
-	/*梯度分割混合*/
+	Mat gradField;			//16SC2
+	GradientField(gradx, grady, gradField);			//結合梯度場
+
+	Mat gradm, gradd;		//32FC1
+	CalculateGradient(gradField, gradm, gradd);		//計算梯度幅值及方向
+
+	Mat gradx_out, grady_out, gradm_out, gradd_out, gradf_out;		//8UC1
+	DrawAbsGraySystem(gradx, gradx_out);
+	DrawAbsGraySystem(grady, grady_out);
+	DrawAbsGraySystem(gradm, gradm_out);
+	DrawColorSystem(gradd, gradd_out);
+	DrawColorSystem(gradField, gradf_out);
+
+	string gxOutfile = filepath + "\\" + infilename + "_GX.png";			//影像梯度(水平)
+	imwrite(gxOutfile, gradx_out);
+	string gyOutfile = filepath + "\\" + infilename + "_GY.png";			//影像梯度(垂直)
+	imwrite(gyOutfile, grady_out);
+	string gmOutfile = filepath + "\\" + infilename + "_GM.png";			//影像梯度(幅值)
+	imwrite(gmOutfile, gradm_out);
+	string gdOutfile = filepath + "\\" + infilename + "_GD.png";			//影像梯度(方向)
+	imwrite(gdOutfile, gradd_out);
+	string gfOutfile = filepath + "\\" + infilename + "_GF.png";			//影像梯度(場)
+	imwrite(gfOutfile, gradf_out);
+
+	/*非最大值抑制*/
+
+	Mat gradNMS;			//16SC2
+	NonMaximumSuppression(gradField, gradNMS);
+
+	Mat gradmNMS_out, gradfNMS_out;		//8UC1
+	DrawAbsGraySystem(gradNMS, gradmNMS_out);
+	DrawColorSystem(gradNMS, gradfNMS_out);
+
+	string mNMSOutfile = filepath + "\\" + infilename + "_M_NMS.png";			//非最大值抑制(幅值)
+	imwrite(mNMSOutfile, gradmNMS_out);
+	string fNMSOutfile = filepath + "\\" + infilename + "_F_NMS.png";			//非最大值抑制(場)
+	imwrite(fNMSOutfile, gradfNMS_out);
+
+	/*差分混合模式*/
+
+	Mat gradDivide;			//8UC1
+	Divide(gradmNMS_out, grayImage, gradDivide);		//差分混合模式	
+
+	string divideOutfile = filepath + "\\" + infilename + "_Divide.png";			//差分混合模式
+	imwrite(divideOutfile, gradDivide);
+
+	/*滯後閥值*/
+	Mat edgeHT;		//8UC1
+	HysteresisThreshold(gradDivide, edgeHT, 150, 100);
+	string edgehtOutfile = filepath + "\\" + infilename + "_HT.png";			//滯後閥值
+	imwrite(edgehtOutfile, edgeHT);
 
     return 0;
 }
 
 
-void LayerMix(InputArray _grayImage, InputArray _blurImage, OutputArray _mixImage)
-{
-	Mat grayImage = _grayImage.getMat();
-	CV_Assert(grayImage.type() == CV_8UC1);
-
-	Mat blurImage = _blurImage.getMat();
-	CV_Assert(blurImage.type() == CV_8UC1);
-
-	_mixImage.create(grayImage.size(), CV_8UC1);
-	Mat mixImage = _mixImage.getMat();
-
-	double divide = 0;
-	for (int i = 0; i < grayImage.rows; ++i)
-	{
-		for (int j = 0; j < grayImage.cols; ++j)
-		{
-			divide = (double)grayImage.at<uchar>(i, j) / (double)blurImage.at<uchar>(i, j) > 1 ? 255 : ((double)grayImage.at<uchar>(i, j) / (double)blurImage.at<uchar>(i, j)) * 255.0;
-			mixImage.at<uchar>(i, j) = divide + (double)blurImage.at<uchar>(i, j) < 255.0 ? 0 : 255;
-		}
-	}
-}
-
-void Differential(InputArray _grayImage, OutputArray _grad_x, OutputArray _grad_y, OutputArray _grad_mag) {
-
-	Mat grayImage = _grayImage.getMat();
-	CV_Assert(grayImage.type() == CV_8UC1);
-
-	_grad_x.create(grayImage.size(), CV_8UC1);
-	Mat grad_x = _grad_x.getMat();
-
-	_grad_y.create(grayImage.size(), CV_8UC1);
-	Mat grad_y = _grad_y.getMat();
-
-	_grad_mag.create(grayImage.size(), CV_8UC1);
-	Mat grad_mag = _grad_mag.getMat();
-
-	Mat grayImageRef;
-	copyMakeBorder(grayImage, grayImageRef, 1, 1, 1, 1, BORDER_REPLICATE);
-	float gradx_temp = 0;
-	float grady_temp = 0;
-	for (int i = 0; i < grayImage.rows; ++i)
-		for (int j = 0; j < grayImage.cols; ++j) {
-			gradx_temp = ((float)grayImageRef.at<uchar>(i + 1, j) - (float)grayImageRef.at<uchar>(i + 1, j + 2))*0.5;
-			grady_temp = ((float)grayImageRef.at<uchar>(i, j + 1) - (float)grayImageRef.at<uchar>(i + 2, j + 1))*0.5;
-
-			grad_x.at<uchar>(i, j) = abs(gradx_temp);
-			grad_y.at<uchar>(i, j) = abs(grady_temp);
-			grad_mag.at<uchar>(i, j) = sqrt(pow(gradx_temp, 2) + pow(grady_temp, 2));
-		}
-}
-
-void DrawAbsGraySystem(InputArray _field, OutputArray _grayField)
-{
-	Mat field = _field.getMat();
-
-	_grayField.create(field.size(), CV_8UC1);
-	Mat grayField = _grayField.getMat();
-
-	// determine motion range:  
-	double maxvalue = 0;
-
-	// Find max flow to normalize fx and fy  
-	for (int i = 0; i < field.rows; ++i)
-		for (int j = 0; j < field.cols; ++j)
-			maxvalue = maxvalue > field.at<uchar>(i, j) ? maxvalue : field.at<uchar>(i, j);
-
-	for (int i = 0; i < field.rows; ++i)
-		for (int j = 0; j < field.cols; ++j) {
-			grayField.at<uchar>(i, j) = ((double)field.at<uchar>(i, j) / maxvalue) * 255;
-		}
-}
