@@ -253,7 +253,7 @@ void DrawColorSystem(InputArray _field, OutputArray _colorField)
 
 				float rad = sqrt(fx * fx + fy * fy) / maxrad;
 
-				float angle = atan2(-fy, -fx) / CV_PI;    //單位為-1至+1
+				float angle = atan2(fy, fx) / CV_PI;    //單位為-1至+1
 				float fk = (angle + 1.0) / 2.0 * (colorwheel.size() - 1);  //計算角度對應之索引位置
 				int k0 = (int)fk;
 				int k1 = (k0 + 1) % colorwheel.size();
