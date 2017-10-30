@@ -12,8 +12,11 @@ int bwlabel(InputArray _binaryImg, OutputArray _labels, int nears);
 /*創建色環*/
 void makecolorwheel(vector<Scalar> &colorwheel);
 
-/*將圖片轉以色環方向場顯示*/
+/*將圖片轉以色環方向場顯示(輸入梯度場或梯度方向)*/
 void DrawColorSystem(InputArray _field, OutputArray _colorField);
+
+/*將圖片轉以色環方向場顯示(輸入梯度幅值及梯度方向)*/
+void DrawColorSystem(InputArray _gradm, InputArray _gradd, OutputArray _colorField);
 
 /*將圖片轉線性拉伸並以灰階值顯示*/
 void DrawAbsGraySystem(InputArray _field, OutputArray _grayField);
@@ -21,7 +24,7 @@ void DrawAbsGraySystem(InputArray _field, OutputArray _grayField);
 /*圖層混合模式*/
 void LayerMix(InputArray _grayImage, InputArray _blurImage, OutputArray _mixImage);
 
-/*差分混合模式*/
+/*基於面的分割混合模式*/
 void Divide(InputArray _grayImage, InputArray _mixImage, OutputArray _divideImage);
 
 /*實色印疊合混合模式*/
@@ -40,7 +43,7 @@ void GradientField(InputArray _grad_x, InputArray _grad_y, OutputArray _gradient
 void CalculateGradient(InputArray _gradientField, OutputArray _gradm, OutputArray _gradd);
 
 /*非極大值抑制*/
-void NonMaximumSuppression(InputArray _gradientField, OutputArray _NMSgradientField);
+void NonMaximumSuppression(InputArray _gradm, InputArray _gradd, OutputArray _gradmNMS, OutputArray _graddNMS);
 
 /*滯後閥值*/
 void HysteresisThreshold(InputArray _NMSgradientField_abs, OutputArray _HTedge, int upperThreshold, int lowerThreshold);

@@ -38,12 +38,12 @@ int main()
 
 	/*載入原圖*/
 
-	Mat srcImage = imread(infile);	//原始圖
+	Mat srcImage = imread(infile);	//原始影像(8UC1 || 8UC3 )
 	if (!srcImage.data) { printf("Oh，no，讀取srcImage錯誤~！ \n"); return false; }
 
 	/*將原圖像轉換為灰度圖像*/
 
-	Mat grayImage;
+	Mat grayImage;		//灰階影像(8UC1)
 	if (srcImage.type() != CV_8UC1)
 	{
 		cvtColor(srcImage, grayImage, CV_BGR2GRAY);
@@ -54,95 +54,113 @@ int main()
 	else
 		grayImage = srcImage;
 
-	/*將灰度圖像中值模糊*/
-	Mat blurImage;
+
+	/****基於面的影像萃取****/
+
+	/*將灰度圖像高斯模糊*/
+
+	Mat blurImage;	//模糊影像(8UC1)	
 	GaussianBlur(grayImage, blurImage, Size(blurSize, blurSize), 0, 0);
 
 	string bluroutfile = filepath + "\\" + infilename + "_1_BLUR.png";		//模糊影像
 	imwrite(bluroutfile, blurImage);
 
-	/*基於面的圖層混合模式*/
+	/*圖層混合模式*/
 
-	Mat divideArea;
+	Mat divideArea;		//分割混合模式(8UC1)
 	Divide(grayImage, blurImage, divideArea);
 
-	string divideaOutfile = filepath + "\\" + infilename + "_DIVIDEA.png";			//基於面的圖層混合模式
+	string divideaOutfile = filepath + "\\" + infilename + "_2_DIVIDEA.png";			//分割混合模式
 	imwrite(divideaOutfile, divideArea);
 
-	Mat hardmixArea;
-	HardMix(grayImage, divideArea, hardmixArea);
+	Mat hardmixArea;	//實色印疊合混合模式(8UC1 and 二值影像)
+	HardMix(grayImage, divideArea, hardmixArea);			
 
-	string hardmixaOutfile = filepath + "\\" + infilename + "_HARDMIXA.png";			//基於面的圖層混合模式
+	string hardmixaOutfile = filepath + "\\" + infilename + "_2_HARDMIXA.png";			//實色印疊合混合模式
 	imwrite(hardmixaOutfile, hardmixArea);
 
 	/*去除影像雜訊*/
 
-	Mat clearWiteArea,clearBlackArea;
+	Mat clearWiteArea;		//去除白色雜訊(8UC1 and 二值影像)
 	ClearNoise(hardmixArea, clearWiteArea, 20, 4, 1);
 
-	string clearwOutfile = filepath + "\\" + infilename + "_CLEARW.png";			//基於面的圖層混合模式
+	string clearwOutfile = filepath + "\\" + infilename + "_3_CLEARW.png";			//去除白色雜訊
 	imwrite(clearwOutfile, clearWiteArea);
 
+	Mat clearBlackArea;		//去除黑色雜訊(8UC1 and 二值影像)
 	ClearNoise(clearWiteArea, clearBlackArea, 20, 4, 0);
 
-	string clearbOutfile = filepath + "\\" + infilename + "_CLEARB.png";			//基於面的圖層混合模式
+	string clearbOutfile = filepath + "\\" + infilename + "_3_CLEARB.png";			//去除黑色雜訊
 	imwrite(clearbOutfile, clearBlackArea);
+
+
+	/****基於線的影像萃取****/
 
 	/*計算影像梯度*/
 
-	Mat gradx,grady;		//16SC1
+	Mat gradx,grady;		//水平及垂直梯度(16SC1)
 	Differential(grayImage, gradx, grady);
 
-	Mat gradField;			//16SC2
-	GradientField(gradx, grady, gradField);			//結合梯度場
+	Mat gradf;			//梯度場(16SC2)
+	GradientField(gradx, grady, gradf);
 
-	Mat gradm, gradd;		//32FC1
-	CalculateGradient(gradField, gradm, gradd);		//計算梯度幅值及方向
+	Mat gradm, gradd;		//梯度幅值及梯度方向(32FC1)
+	CalculateGradient(gradf, gradm, gradd);
 
-	Mat gradx_out, grady_out, gradm_out, gradd_out, gradf_out;		//8UC1
+	Mat gradx_out, grady_out, gradm_out, gradd_out, gradf_out;		//輸出用(8UC1 or 8UC3)
 	DrawAbsGraySystem(gradx, gradx_out);
 	DrawAbsGraySystem(grady, grady_out);
 	DrawAbsGraySystem(gradm, gradm_out);
 	DrawColorSystem(gradd, gradd_out);
-	DrawColorSystem(gradField, gradf_out);
+	DrawColorSystem(gradf, gradf_out);
 
-	string gxOutfile = filepath + "\\" + infilename + "_GX.png";			//影像梯度(水平)
+	string gxOutfile = filepath + "\\" + infilename + "_4_GX.png";			//輸出用影像梯度(水平)
 	imwrite(gxOutfile, gradx_out);
-	string gyOutfile = filepath + "\\" + infilename + "_GY.png";			//影像梯度(垂直)
+	string gyOutfile = filepath + "\\" + infilename + "_4_GY.png";			//輸出用影像梯度(垂直)
 	imwrite(gyOutfile, grady_out);
-	string gmOutfile = filepath + "\\" + infilename + "_GM.png";			//影像梯度(幅值)
+	string gmOutfile = filepath + "\\" + infilename + "_4_GM.png";			//輸出用影像梯度(幅值)
 	imwrite(gmOutfile, gradm_out);
-	string gdOutfile = filepath + "\\" + infilename + "_GD.png";			//影像梯度(方向)
+	string gdOutfile = filepath + "\\" + infilename + "_4_GD.png";			//輸出用影像梯度(方向)
 	imwrite(gdOutfile, gradd_out);
-	string gfOutfile = filepath + "\\" + infilename + "_GF.png";			//影像梯度(場)
+	string gfOutfile = filepath + "\\" + infilename + "_4_GF.png";			//輸出用影像梯度(場)
 	imwrite(gfOutfile, gradf_out);
 
-	/*非最大值抑制*/
+	/*分割混合模式*/
 
-	Mat gradNMS;			//16SC2
-	NonMaximumSuppression(gradField, gradNMS);
+	Mat divideLine;										//分割混合模式(8UC1)
+	Divide(gradm, grayImage, divideLine);
 
-	Mat gradmNMS_out, gradfNMS_out;		//8UC1
-	DrawAbsGraySystem(gradNMS, gradmNMS_out);
-	DrawColorSystem(gradNMS, gradfNMS_out);
+	Mat gradmDivide_out, gradfDivide_out;				//輸出用(8UC1 or 8UC3)
+	DrawAbsGraySystem(divideLine, gradmDivide_out);
+	DrawColorSystem(divideLine, gradd, gradfDivide_out);
 
-	string mNMSOutfile = filepath + "\\" + infilename + "_M_NMS.png";			//非最大值抑制(幅值)
-	imwrite(mNMSOutfile, gradmNMS_out);
-	string fNMSOutfile = filepath + "\\" + infilename + "_F_NMS.png";			//非最大值抑制(場)
-	imwrite(fNMSOutfile, gradfNMS_out);
+	string gradmDivideOutfile = filepath + "\\" + infilename + "_5_DIVIDEM.png";			//輸出用分割混合模式(幅值)
+	imwrite(gradmDivideOutfile, gradmDivide_out);
+	string gradfDivideOutfile = filepath + "\\" + infilename + "_5_DIVIDEF.png";			//輸出用分割混合模式(場)
+	imwrite(gradfDivideOutfile, gradfDivide_out);
 
-	/*差分混合模式*/
+	/*非極大值抑制*/
+	
+	Mat gradmNMS, graddNMS;			//非最大值抑制(8UC1、32FC1)
+	NonMaximumSuppression(divideLine, gradd, gradmNMS, graddNMS);
 
-	Mat gradDivide;			//8UC1
-	Divide(gradmNMS_out, grayImage, gradDivide);		//差分混合模式	
+	Mat gradmNMS_out, graddNMS_out, gradfNMS_out;		//輸出用(8UC1 or 8UC3)
+	DrawAbsGraySystem(gradmNMS, gradmNMS_out);
+	DrawColorSystem(graddNMS, graddNMS_out);
+	DrawColorSystem(gradmNMS, graddNMS, gradfNMS_out);
 
-	string divideOutfile = filepath + "\\" + infilename + "_Divide.png";			//差分混合模式
-	imwrite(divideOutfile, gradDivide);
+	string gradmNMSOutfile = filepath + "\\" + infilename + "_6_NMSM.png";			//非最大值抑制(幅值)
+	imwrite(gradmNMSOutfile, gradmNMS_out);
+	string graddNMSOutfile = filepath + "\\" + infilename + "_6_NMSD.png";			//非最大值抑制(方向)
+	imwrite(graddNMSOutfile, graddNMS_out);
+	string gradFNMSOutfile = filepath + "\\" + infilename + "_6_NMSF.png";			//非最大值抑制(場)
+	imwrite(gradFNMSOutfile, gradfNMS_out);
 
 	/*滯後閥值*/
-	Mat edgeHT;		//8UC1
-	HysteresisThreshold(gradDivide, edgeHT, 150, 100);
-	string edgehtOutfile = filepath + "\\" + infilename + "_HT.png";			//滯後閥值
+
+	Mat edgeHT;		//滯後閥值(8UC1 and 二值影像)
+	HysteresisThreshold(gradmNMS, edgeHT, 150, 50);
+	string edgehtOutfile = filepath + "\\" + infilename + "_7_HT.png";			//滯後閥值
 	imwrite(edgehtOutfile, edgeHT);
 
     return 0;
