@@ -45,5 +45,8 @@ void CalculateGradient(InputArray _gradientField, OutputArray _gradm, OutputArra
 /*非極大值抑制*/
 void NonMaximumSuppression(InputArray _gradm, InputArray _gradd, OutputArray _gradmNMS, OutputArray _graddNMS);
 
+/*清除異方向點*/
+void ClearDifferentDirection(InputArray _gradm, InputArray _gradd, OutputArray _gradmCDD, OutputArray _graddCDD);
+
 /*滯後閥值*/
 void HysteresisThreshold(InputArray _NMSgradientField_abs, OutputArray _HTedge, int upperThreshold, int lowerThreshold);

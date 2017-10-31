@@ -764,7 +764,7 @@ void NonMaximumSuppression(InputArray _gradm, InputArray _gradd, OutputArray _gr
 			amplitude1 = A1*(1 - alpha) + A2*alpha;
 			amplitude2 = B1*(1 - alpha) + B2*alpha;
 
-			if (amplitude >= amplitude1 && amplitude >= amplitude2)
+			if (amplitude > amplitude1 && amplitude > amplitude2)
 			{
 				gradmNMS.at<uchar>(i, j) = gradm.at<uchar>(i, j);
 				graddNMS.at<float>(i, j) = gradd.at<float>(i, j);
@@ -801,7 +801,7 @@ void ClearDifferentDirection(InputArray _gradm, InputArray _gradd, OutputArray _
 		{
 			theta = ((gradd.at<float>(i, j) + CV_PI) / CV_PI)*180.0f;
 
-			if ((theta >= 337.5f && theta < 22.5f) || (theta >= 157.5f && theta < 202.5f))
+			if ((theta >= 337.5f && theta < 22.5f && theta <= 360.0f && theta >=0.0f) || (theta >= 157.5f && theta < 202.5f))
 				mask.at<uchar>(i + 1, j) = mask.at<uchar>(i + 1, j + 2) = 0;
 			else if ((theta >= 22.5f && theta < 67.5f) || (theta >= 202.5f && theta < 247.5f))
 				mask.at<uchar>(i, j) = mask.at<uchar>(i + 2, j + 2) = 0;
