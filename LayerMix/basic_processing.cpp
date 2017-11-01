@@ -1364,14 +1364,14 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					for (int ic = i, jc = j; jc >= j - (x - abs(k - x)); --jc)
 					{
 						gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
-						graddCBL.at<float>(ic, jc) = gradd.at<float>(i, j)*(x - step) / x + connectgradd*step / x;
+						graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(connectgradd)*step, cos(gradd.at<float>(i, j))*(x - step) + cos(connectgradd)*step);
 						++step;
 					}
 					//斜線區
 					for (int ic = i + sign, jc = j - (x - abs(k - x)) - 1; jc >= j - x; ic = ic + sign, --jc)
 					{
 						gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
-						graddCBL.at<float>(ic, jc) = gradd.at<float>(i, j)*(x - step) / x + connectgradd*step / x;
+						graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(connectgradd)*step, cos(gradd.at<float>(i, j))*(x - step) + cos(connectgradd)*step);
 						+step;
 					}
 				}
@@ -1389,15 +1389,16 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					//直線區
 					for (int ic = i, jc = j; ic >= i - (x - abs(k - x)); --ic)
 					{
+						
 						gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
-						graddCBL.at<float>(ic, jc) = gradd.at<float>(i, j)*(x - step) / x + connectgradd*step / x;
+						graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(connectgradd)*step, cos(gradd.at<float>(i, j))*(x - step) + cos(connectgradd)*step);
 						++step;
 					}
 					//斜線區
 					for (int ic = i - (x - abs(k - x)) - 1, jc = j - sign; ic >= i - x; --ic, jc = jc + sign)
 					{
 						gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
-						graddCBL.at<float>(ic, jc) = gradd.at<float>(i, j)*(x - step) / x + connectgradd*step / x;
+						graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(connectgradd)*step, cos(gradd.at<float>(i, j))*(x - step) + cos(connectgradd)*step);
 						+step;
 					}
 				}
@@ -1416,14 +1417,14 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					for (int ic = i, jc = j; jc <= j + (x - abs(k - x)); ++jc)
 					{
 						gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
-						graddCBL.at<float>(ic, jc) = gradd.at<float>(i, j)*(x - step) / x + connectgradd*step / x;
+						graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(connectgradd)*step, cos(gradd.at<float>(i, j))*(x - step) + cos(connectgradd)*step);
 						++step;
 					}
 					//斜線區
 					for (int ic = i - sign, jc = j + (x - abs(k - x)) + 1; jc <= j + x; ic = ic + sign, ++jc)
 					{
 						gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
-						graddCBL.at<float>(ic, jc) = gradd.at<float>(i, j)*(x - step) / x + connectgradd*step / x;
+						graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(connectgradd)*step, cos(gradd.at<float>(i, j))*(x - step) + cos(connectgradd)*step);
 						+step;
 					}
 				}
@@ -1442,14 +1443,14 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					for (int ic = i, jc = j; ic <= i + (x - abs(k - x)); ++ic)
 					{
 						gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
-						graddCBL.at<float>(ic, jc) = gradd.at<float>(i, j)*(x - step) / x + connectgradd*step / x;
+						graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(connectgradd)*step, cos(gradd.at<float>(i, j))*(x - step) + cos(connectgradd)*step);
 						++step;
 					}
 					//斜線區
 					for (int ic = i + (x - abs(k - x)) + 1, jc = j + sign; ic <= i + x; ++ic, jc = jc + sign)
 					{
 						gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
-						graddCBL.at<float>(ic, jc) = gradd.at<float>(i, j)*(x - step) / x + connectgradd*step / x;
+						graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(connectgradd)*step, cos(gradd.at<float>(i, j))*(x - step) + cos(connectgradd)*step);
 						+step;
 					}
 				}
