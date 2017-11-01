@@ -191,12 +191,26 @@ int main()
 
 	/*斷線連通*/
 
+	Mat gradmCBL, graddCBL;			//斷線連通(8UC1、32FC1)
+	ConnectBreakLine(gradmCDD, graddCDD, gradmCBL, graddCBL,1);
+
+	Mat gradmCBL_out, graddCBL_out, gradfCBL_out;		//輸出用(8UC1 or 8UC3)
+	DrawAbsGraySystem(gradmCBL, gradmCBL_out);
+	DrawColorSystem(graddCBL, graddCBL_out);
+	DrawColorSystem(gradmCBL, graddCBL, gradfCBL_out);
+
+	string gradmCBLOutfile = filepath + "\\" + infilename + "_9.1_CBLM.png";			//清除異方向點(幅值)
+	imwrite(gradmCBLOutfile, gradmCBL_out);
+	string graddCBLOutfile = filepath + "\\" + infilename + "_9.2_CBLD.png";			//清除異方向點(方向)
+	imwrite(graddCBLOutfile, graddCBL_out);
+	string gradFCBLOutfile = filepath + "\\" + infilename + "_9.3_CBLF.png";			//清除異方向點(場)
+	imwrite(gradFCBLOutfile, gradfCBL_out);
 
 	/*滯後閥值*/
 
 	Mat edgeHT;		//滯後閥值(8UC1 and 二值影像)
 	HysteresisThreshold(gradmNMS, edgeHT, 150, 5);
-	string edgehtOutfile = filepath + "\\" + infilename + "_9_HT.png";			//滯後閥值
+	string edgehtOutfile = filepath + "\\" + infilename + "_10_HT.png";			//滯後閥值
 	imwrite(edgehtOutfile, edgeHT);
 
     return 0;

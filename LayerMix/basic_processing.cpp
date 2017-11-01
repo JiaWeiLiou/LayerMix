@@ -183,31 +183,31 @@ void pointlabel(InputArray _gradm, OutputArray _labels)
 			}
 
 
-			if (num == 0)		//Isolated Point
+			if (num == 1)		//Isolated Point
 			{
 				labels.at<Vec2b>(i, j)[0] = 1;
 				labels.at<Vec2b>(i, j)[1] = 0;
 			}
-			else if (num == 1)		//End of Line Point 
+			else if (num == 2)		//End of Line Point 
 			{
 				labels.at<Vec2b>(i, j)[0] = 2;
-				for (int i = 1; i <= 8; ++i)
-					if (nearPoint[i] != 0)
+				for (int k = 1; k <= 8; ++k)
+					if (nearPoint[k] != 0)
 					{
-						labels.at<Vec2b>(i, j)[1] = i;
+						labels.at<Vec2b>(i, j)[1] = k;
 						break;
 					}
 			}
-			else if (num == 2)
+			else if (num == 3)
 			{
-				for (int i = 1; i <= 8; ++i)
-					if (nearPoint[(i % 9)] != 0 && nearPoint[(i % 8) + 1] != 0) //1,2、2,3、...、8,1   End of Line Point 
+				for (int k = 1; k <= 8; ++k)
+					if (nearPoint[(k % 9)] != 0 && nearPoint[(k % 8) + 1] != 0) //1,2、2,3、...、8,1   End of Line Point 
 					{
 						labels.at<Vec2b>(i, j)[0] = 2;
-						if (i % 2 == 1)		//只存取對角線的方向
-							labels.at<Vec2b>(i, j)[1] = i + 1;
+						if (k % 2 == 1)		//只存取對角線的方向
+							labels.at<Vec2b>(i, j)[1] = k + 1;
 						else
-							labels.at<Vec2b>(i, j)[1] = i;
+							labels.at<Vec2b>(i, j)[1] = k;
 						break;
 					}
 					else	//Line Point
@@ -920,6 +920,9 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 	_graddCBL.create(gradd.size(), CV_32FC1);
 	Mat graddCBL = _graddCBL.getMat();
 
+	gradm.copyTo(gradmCBL);
+	gradd.copyTo(graddCBL);
+
 	int x = spacing + 1;  // start from 2 (actual spacing for search)
 
 	Mat endPointMap;
@@ -931,7 +934,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 		{
 			if (gradm.at<uchar>(i, j) != 0)
 			{
-				bwLineMap.at<uchar>(i, j) = 1;
+				bwLineMap.at<uchar>(i, j) = 255;
 			}
 		}
 
@@ -945,12 +948,12 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 	copyMakeBorder(linelabels, linelabelsRef, spacing, spacing, spacing, spacing, BORDER_CONSTANT, Scalar(0));
 
 	/*搜尋並連通線*/
-	for (int i = 0; i < gradd.rows; ++i)
-		for (int j = 0; j < gradd.cols; ++j)
+	for (int i = 1; i < gradd.rows-1; ++i)		//不搜尋影像邊界
+		for (int j = 1; j < gradd.cols-1; ++j)		//不搜尋影像邊界
 		{
 			int ir = i + spacing, jr = j + spacing;		//reference index i,j for graddRef
 
-			if (endPointMap.at<Vec2b>(i, j)[0] == 2)
+			if (endPointMap.at<Vec2b>(i, j)[0] == 2)	//判斷是否為端點
 			{
 				int nowlabel = linelabels.at<int>(i, j);		//目前端點標註
 				float theta0 = ((gradd.at<float>(i, j) + CV_PI) / CV_PI)*180.0f;	//目前端點角度
@@ -1341,7 +1344,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 				if (searchLocation == 1 && mintheta <= 90)		//4區域搜尋 - 1區
 				{
 					connectgradm = gradm.at<uchar>(i + x - k, j - x);		//連通目標幅值
-					connectgradd = gradd.at<uchar>(i + x - k, j - x);		//連通目標方向
+					connectgradd = gradd.at<float>(i + x - k, j - x);		//連通目標方向
 
 					int step = 0;	//步數及權重(from 0 to x)
 					int sign = 0;	//斜線偏左或偏右
@@ -1367,7 +1370,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 				else if (searchLocation == 2 && mintheta <= 90)		//4區域搜尋 - 2區
 				{
 					connectgradm = gradm.at<uchar>(i - x, j - x + k);		//連通目標幅值
-					connectgradd = gradd.at<uchar>(i - x, j - x + k);		//連通目標方向
+					connectgradd = gradd.at<float>(i - x, j - x + k);		//連通目標方向
 
 					int step = 0;	//步數及權重(from 0 to x)
 					int sign = 0;	//斜線偏左或偏右
@@ -1390,6 +1393,59 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 						+step;
 					}
 				}
+				else if (searchLocation == 3 && mintheta <= 90)		//4區域搜尋 - 3區
+				{
+					connectgradm = gradm.at<uchar>(i - x + k, j + x);		//連通目標幅值
+					connectgradd = gradd.at<float>(i - x + k, j + x);		//連通目標方向
+
+					int step = 0;	//步數及權重(from 0 to x)
+					int sign = 0;	//斜線偏左或偏右
+
+					if (x - k > 0) { sign = 1; }
+					else if (x - k < 0) { sign = -1; }
+
+					//直線區
+					for (int ic = i, jc = j; jc <= j + (x - abs(k - x)); ++jc)
+					{
+						gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
+						graddCBL.at<float>(ic, jc) = abs(gradd.at<float>(i, j)*(x - step) / x - connectgradd*step / x) > 180 ? gradd.at<float>(i, j)*(x - step) / x + connectgradd*step / x + 180 : gradd.at<float>(i, j)*(x - step) / x + connectgradd*step / x;
+						++step;
+					}
+					//斜線區
+					for (int ic = i - sign, jc = j + (x - abs(k - x)) + 1; jc <= j + x; ic = ic + sign, ++jc)
+					{
+						gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
+						graddCBL.at<float>(ic, jc) = abs(gradd.at<float>(i, j)*(x - step) / x - connectgradd*step / x) > 180 ? gradd.at<float>(i, j)*(x - step) / x + connectgradd*step / x + 180 : gradd.at<float>(i, j)*(x - step) / x + connectgradd*step / x;
+						+step;
+					}
+				}
+				else if (searchLocation == 4 && mintheta <= 90)		//4區域搜尋 - 3區
+				{
+					connectgradm = gradm.at<uchar>(i + x, j + x - k);		//連通目標幅值
+					connectgradd = gradd.at<float>(i + x, j + x - k);		//連通目標方向
+
+					int step = 0;	//步數及權重(from 0 to x)
+					int sign = 0;	//斜線偏左或偏右
+
+					if (x - k > 0) { sign = 1; }
+					else if (x - k < 0) { sign = -1; }
+
+					//直線區
+					for (int ic = i, jc = j; ic <= i + (x - abs(k - x)); ++ic)
+					{
+						gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
+						graddCBL.at<float>(ic, jc) = abs(gradd.at<float>(i, j)*(x - step) / x - connectgradd*step / x) > 180 ? gradd.at<float>(i, j)*(x - step) / x + connectgradd*step / x + 180 : gradd.at<float>(i, j)*(x - step) / x + connectgradd*step / x;
+						++step;
+					}
+					//斜線區
+					for (int ic = i + (x - abs(k - x)) + 1, jc = j + sign; ic <= i + x; ++ic, jc = jc + sign)
+					{
+						gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
+						graddCBL.at<float>(ic, jc) = abs(gradd.at<float>(i, j)*(x - step) / x - connectgradd*step / x) > 180 ? gradd.at<float>(i, j)*(x - step) / x + connectgradd*step / x + 180 : gradd.at<float>(i, j)*(x - step) / x + connectgradd*step / x;
+						+step;
+					}
+				}
+
 			}
 		}
 
