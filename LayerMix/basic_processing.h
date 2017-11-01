@@ -1,6 +1,9 @@
 #pragma once
-#include <opencv2/opencv.hpp> 
+#include <opencv2/opencv.hpp>
+#include <vector>
+#include <cmath>
 
+using namespace std;
 using namespace cv;
 
 /*尋找根結點*/
@@ -8,6 +11,24 @@ int findroot(int labeltable[], int label);
 
 /*尋找連通線*/
 int bwlabel(InputArray _binaryImg, OutputArray _labels, int nears);
+
+/*判斷點的類型*/
+// channel 1 put the type of points
+//  0 -- None Point
+//  1 -- Isolated Point
+//  2 -- End of Line Point 
+//  3 -- Line Point
+// channel 2 put the neighborhood direction at end of Line Point
+//  0 -- None
+//  1 - 8 -- Location of neighborhood point
+//	+ - + - + - +
+//	| 2 | 3 | 4 |
+//	+ - + - + - +
+//	| 1 | 0 | 5 |
+//	+ - + - + - +
+//	| 8 | 7 | 6 |
+//	+ - + - + - +
+void pointlabel(InputArray _gradm, OutputArray _labels);
 
 /*創建色環*/
 void makecolorwheel(vector<Scalar> &colorwheel);
@@ -47,6 +68,9 @@ void NonMaximumSuppression(InputArray _gradm, InputArray _gradd, OutputArray _gr
 
 /*清除異方向點*/
 void ClearDifferentDirection(InputArray _gradm, InputArray _gradd, OutputArray _gradmCDD, OutputArray _graddCDD);
+
+/*斷線連通*/
+void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCBL, OutputArray _graddCBL, int spacing);
 
 /*滯後閥值*/
 void HysteresisThreshold(InputArray _NMSgradientField_abs, OutputArray _HTedge, int upperThreshold, int lowerThreshold);
