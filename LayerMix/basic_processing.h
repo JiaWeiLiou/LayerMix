@@ -16,8 +16,9 @@ int bwlabel(InputArray _binaryImg, OutputArray _labels, int nears);
 // channel 1 put the type of points
 //  0 -- None Point
 //  1 -- Isolated Point
-//  2 -- End of Line Point 
+//  2 -- EndPoint 
 //  3 -- Line Point
+//  4 -- Out of Endpoint 
 // channel 2 put the neighborhood direction at end of Line Point
 //  0 -- None
 //  1 - 8 -- Location of neighborhood point

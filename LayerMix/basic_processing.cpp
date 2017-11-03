@@ -931,29 +931,20 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 	gradm.copyTo(gradmCBL);
 	gradd.copyTo(graddCBL);
 
+	if (spacing < 1) { spacing = 1; }
 	int x = spacing + 1;  // start from 2 (actual spacing for search)
 
-	Mat endPointMap;
+	Mat endPointMap;		//儲存點類型
 	pointlabel(gradm, endPointMap);
 
-	Mat bwLineMap(gradm.size(), CV_8UC1, Scalar(0));	//create bw image for labels
-	for (int i = 0; i < gradm.rows; ++i)
-		for (int j = 0; j < gradm.cols; ++j)
-		{
-			if (gradm.at<uchar>(i, j) != 0)
-			{
-				bwLineMap.at<uchar>(i, j) = 255;
-			}
-		}
-
-	Mat linelabels;
-	int bwnum = bwlabel(bwLineMap, linelabels, 8);
+	Mat nearPoint1(gradm.size(), CV_8UC1, Scalar(1));		//相鄰方向1
+	Mat nearPoint2(gradm.size(), CV_8UC1, Scalar(1));		//相鄰方向2
+	Mat nearPoint3(gradm.size(), CV_8UC1, Scalar(1));		//相鄰方向3
+	Mat nearPoint4(gradm.size(), CV_8UC1, Scalar(1));		//相鄰方向4
+	Mat nearPoint5(gradm.size(), CV_8UC1, Scalar(1));		//相鄰方向5
 
 	Mat graddRef;
 	copyMakeBorder(gradd, graddRef, spacing, spacing, spacing, spacing, BORDER_CONSTANT, Scalar(-1000.0f));
-
-	Mat linelabelsRef;
-	copyMakeBorder(linelabels, linelabelsRef, spacing, spacing, spacing, spacing, BORDER_CONSTANT, Scalar(0));
 
 	/*搜尋並連通線*/
 	for (int i = 1; i < gradd.rows-1; ++i)		//不搜尋影像邊界
@@ -963,7 +954,6 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 
 			if (endPointMap.at<Vec2b>(i, j)[0] == 2)	//判斷是否為端點
 			{
-				int nowlabel = linelabels.at<int>(i, j);		//目前端點標註
 				float theta0 = ((gradd.at<float>(i, j) + CV_PI) / CV_PI)*180.0f;	//目前端點角度
 				float divtheta = 0.0f;		//搜索點相差角度
 				float mintheta = 180.0f;	//最小相差角度
@@ -978,10 +968,13 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 				if (endPointMap.at<Vec2b>(i, j)[1] == 1)		//8區域搜尋 - 1區
 				{
 					//N->NE
+					if (nearPoint1.at<uchar>(i, j) == 1)
 					for (int is = ir - x, js = jr, nowLocation = x; js <= jr + x - 1; ++js, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == x) { nearPoint1.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -992,11 +985,18 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 							}
 						}
 					}
+					
 					//NE->SE
 					for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (nowLocation == 0 && nearPoint2.at<uchar>(i, j) == 0) { continue; }
+						else if (nearPoint3.at<uchar>(i, j) == 0) { continue; }
+
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == 0) { nearPoint2.at<uchar>(i, j) == 0; }
+							else if (nowLocation == x) { nearPoint3.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1007,11 +1007,18 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 							}
 						}
 					}
+					
 					//SE->S
 					for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr; --js, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (nowLocation == 0 && nearPoint4.at<uchar>(i, j) == 0) { continue; }
+						else if (nearPoint5.at<uchar>(i, j) == 0) { continue; }
+
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == 0) { nearPoint4.at<uchar>(i, j) == 0; }
+							else if (nowLocation == x) { nearPoint5.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1028,8 +1035,14 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					//NE->SE
 					for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (nowLocation == 0 && nearPoint1.at<uchar>(i, j) == 0) { continue; }
+						else if (nearPoint2.at<uchar>(i, j) == 0) { continue; }
+
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == 0) { nearPoint1.at<uchar>(i, j) == 0; }
+							else if (nowLocation == x) { nearPoint2.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1043,8 +1056,14 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					//SE->SW
 					for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (nowLocation == 0 && nearPoint3.at<uchar>(i, j) == 0) { continue; }
+						else if (nearPoint4.at<uchar>(i, j) == 0) { continue; }
+
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == 0) { nearPoint3.at<uchar>(i, j) == 0; }
+							else if (nowLocation == x) { nearPoint4.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1056,8 +1075,10 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 						}
 					}
 					//SW
-					if (graddRef.at<float>(ir + x, jr - x) != -1000.0f && linelabelsRef.at<int>(ir + x, jr - x) != nowlabel)
+					if (graddRef.at<float>(ir + x, jr - x) != -1000.0f && nearPoint5.at<uchar>(i, j) == 1)
 					{
+						nearPoint5.at<uchar>(i, j) == 0;
+
 						divtheta = abs(((graddRef.at<float>(ir + x, jr - x) + CV_PI) / CV_PI)*180.0f - theta0);
 						divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 						if (divtheta < mintheta)
@@ -1071,10 +1092,13 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 				else if (endPointMap.at<Vec2b>(i, j)[1] == 3)		//8區域搜尋 - 3區
 				{
 					//E->SE
+					if (nearPoint1.at<uchar>(i, j) == 1)
 					for (int is = ir, js = jr + x, nowLocation = x; is <= ir + x - 1; ++is, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == x) { nearPoint1.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1085,11 +1109,18 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 							}
 						}
 					}
+					
 					//SE->SW
 					for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (nowLocation == 0 && nearPoint2.at<uchar>(i, j) == 0) { continue; }
+						else if (nearPoint3.at<uchar>(i, j) == 0) { continue; }
+
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == 0) { nearPoint2.at<uchar>(i, j) == 0; }
+							else if (nowLocation == x) { nearPoint3.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1100,11 +1131,18 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 							}
 						}
 					}
+					
 					//SW->W
 					for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir; --is, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (nowLocation == 0 && nearPoint4.at<uchar>(i, j) == 0) { continue; }
+						else if (nearPoint5.at<uchar>(i, j) == 0) { continue; }
+
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == 0) { nearPoint4.at<uchar>(i, j) == 0; }
+							else if (nowLocation == x) { nearPoint5.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1121,8 +1159,14 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					//SE->SW
 					for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (nowLocation == 0 && nearPoint1.at<uchar>(i, j) == 0) { continue; }
+						else if (nearPoint2.at<uchar>(i, j) == 0) { continue; }
+
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == 0) { nearPoint1.at<uchar>(i, j) == 0; }
+							else if (nowLocation == x) { nearPoint2.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1136,8 +1180,14 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					//SW->NW
 					for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (nowLocation == 0 && nearPoint3.at<uchar>(i, j) == 0) { continue; }
+						else if (nearPoint4.at<uchar>(i, j) == 0) { continue; }
+
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == 0) { nearPoint3.at<uchar>(i, j) == 0; }
+							else if (nowLocation == x) { nearPoint4.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1149,8 +1199,10 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 						}
 					}
 					//NW
-					if (graddRef.at<float>(ir - x, jr - x) != -1000.0f && linelabelsRef.at<int>(ir - x, jr - x) != nowlabel)
+					if (graddRef.at<float>(ir - x, jr - x) != -1000.0f && nearPoint5.at<uchar>(i, j) == 1)
 					{
+						nearPoint5.at<uchar>(i, j) == 0;
+
 						divtheta = abs(((graddRef.at<float>(ir - x, jr - x) + CV_PI) / CV_PI)*180.0f - theta0);
 						divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 						if (divtheta < mintheta)
@@ -1164,10 +1216,13 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 				else if (endPointMap.at<Vec2b>(i, j)[1] == 5)		//8區域搜尋 - 5區
 				{
 					//S->SW
+					if (nearPoint1.at<uchar>(i, j) == 1)
 					for (int is = ir + x, js = jr, nowLocation = x; js >= jr - x + 1; --js, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == x) { nearPoint1.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1181,8 +1236,14 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					//SW->NW
 					for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (nowLocation == 0 && nearPoint2.at<uchar>(i, j) == 0) { continue; }
+						else if (nearPoint3.at<uchar>(i, j) == 0) { continue; }
+
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == 0) { nearPoint2.at<uchar>(i, j) == 0; }
+							else if (nowLocation == x) { nearPoint3.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1196,8 +1257,14 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					//NW->N
 					for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr; ++js, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (nowLocation == 0 && nearPoint4.at<uchar>(i, j) == 0) { continue; }
+						else if (nearPoint5.at<uchar>(i, j) == 0) { continue; }
+
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == 0) { nearPoint4.at<uchar>(i, j) == 0; }
+							else if (nowLocation == x) { nearPoint5.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1214,8 +1281,14 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					//SW->NW
 					for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (nowLocation == 0 && nearPoint1.at<uchar>(i, j) == 0) { continue; }
+						else if (nearPoint2.at<uchar>(i, j) == 0) { continue; }
+
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == 0) { nearPoint1.at<uchar>(i, j) == 0; }
+							else if (nowLocation == x) { nearPoint2.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1229,8 +1302,15 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					//NW->NE
 					for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (nowLocation == 0 && nearPoint3.at<uchar>(i, j) == 0) { continue; }
+						else if (nearPoint4.at<uchar>(i, j) == 0) { continue; }
+
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == 0) { nearPoint3.at<uchar>(i, j) == 0; }
+							else if (nowLocation == x) { nearPoint4.at<uchar>(i, j) == 0; }
+
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1242,8 +1322,10 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 						}
 					}
 					//NE
-					if (graddRef.at<float>(ir - x, jr + x) != -1000.0f && linelabelsRef.at<int>(ir - x, jr + x) != nowlabel)
+					if (graddRef.at<float>(ir - x, jr + x) != -1000.0f && nearPoint5.at<uchar>(i, j) == 1)
 					{
+						nearPoint5.at<uchar>(i, j) == 0;
+
 						divtheta = abs(((graddRef.at<float>(ir - x, jr + x) + CV_PI) / CV_PI)*180.0f - theta0);
 						divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 						if (divtheta < mintheta)
@@ -1257,10 +1339,13 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 				else if (endPointMap.at<Vec2b>(i, j)[1] == 7)		//8區域搜尋 - 7區
 				{
 					//W->NW
+					if (nearPoint1.at<uchar>(i, j) == 1)
 					for (int is = ir, js = jr - x, nowLocation = x; is >= ir - x + 1; --is, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == x) { nearPoint1.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1274,8 +1359,14 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					//NW->NE
 					for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (nowLocation == 0 && nearPoint2.at<uchar>(i, j) == 0) { continue; }
+						else if (nearPoint3.at<uchar>(i, j) == 0) { continue; }
+
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == 0) { nearPoint2.at<uchar>(i, j) == 0; }
+							else if (nowLocation == x) { nearPoint3.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1289,8 +1380,14 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					//NE->E
 					for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir; ++is, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (nowLocation == 0 && nearPoint4.at<uchar>(i, j) == 0) { continue; }
+						else if (nearPoint5.at<uchar>(i, j) == 0) { continue; }
+
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == 0) { nearPoint4.at<uchar>(i, j) == 0; }
+							else if (nowLocation == x) { nearPoint5.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1307,8 +1404,14 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					//NW->NE
 					for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (nowLocation == 0 && nearPoint1.at<uchar>(i, j) == 0) { continue; }
+						else if (nearPoint2.at<uchar>(i, j) == 0) { continue; }
+
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == 0) { nearPoint1.at<uchar>(i, j) == 0; }
+							else if (nowLocation == x) { nearPoint2.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1322,8 +1425,14 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					//NE->SE
 					for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
 					{
-						if (graddRef.at<float>(is, js) != -1000.0f && linelabelsRef.at<int>(is, js) != nowlabel)
+						if (nowLocation == 0 && nearPoint3.at<uchar>(i, j) == 0) { continue; }
+						else if (nearPoint4.at<uchar>(i, j) == 0) { continue; }
+
+						if (graddRef.at<float>(is, js) != -1000.0f)
 						{
+							if (nowLocation == 0) { nearPoint3.at<uchar>(i, j) == 0; }
+							else if (nowLocation == x) { nearPoint4.at<uchar>(i, j) == 0; }
+
 							divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
 							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 							if (divtheta < mintheta)
@@ -1335,8 +1444,10 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 						}
 					}
 					//SE
-					if (graddRef.at<float>(ir + x, jr + x) != -1000.0f && linelabelsRef.at<int>(ir + x, jr + x) != nowlabel)
+					if (graddRef.at<float>(ir + x, jr + x) != -1000.0f && nearPoint5.at<uchar>(i, j) == 1)
 					{
+						nearPoint5.at<uchar>(i, j) == 0;
+
 						divtheta = abs(((graddRef.at<float>(ir + x, jr + x) + CV_PI) / CV_PI)*180.0f - theta0);
 						divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 						if (divtheta < mintheta)
@@ -1347,6 +1458,13 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 						}
 					}
 				}
+
+				//修改端點類型
+				if (nearPoint1.at<uchar>(i, j) == 0 && nearPoint2.at<uchar>(i, j) == 0 && nearPoint3.at<uchar>(i, j) == 0 && nearPoint4.at<uchar>(i, j) == 0 && nearPoint5.at<uchar>(i, j) == 0)
+				{
+					endPointMap.at<Vec2b>(i, j)[0] == 4;	//淘汰的端點
+				}
+
 
 				//連通最佳點(四區域分類)
 				if (searchLocation == 1 && mintheta <= 60)		//4區域搜尋 - 1區
@@ -1428,7 +1546,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 						+step;
 					}
 				}
-				else if (searchLocation == 4 && mintheta <= 60)		//4區域搜尋 - 3區
+				else if (searchLocation == 4 && mintheta <= 60)		//4區域搜尋 - 4區
 				{
 					connectgradm = gradm.at<uchar>(i + x, j + x - k);		//連通目標幅值
 					connectgradd = gradd.at<float>(i + x, j + x - k);		//連通目標方向
