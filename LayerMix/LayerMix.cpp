@@ -192,7 +192,7 @@ int main()
 	/*斷線連通*/
 
 	Mat gradmCBL, graddCBL;			//斷線連通(8UC1、32FC1)
-	ConnectBreakLine(gradmCDD, graddCDD, gradmCBL, graddCBL,1);
+	ConnectBreakLine(gradmCDD, graddCDD, gradmCBL, graddCBL, 2, 8);
 
 	Mat gradmCBL_out, graddCBL_out, gradfCBL_out;		//輸出用(8UC1 or 8UC3)
 	DrawAbsGraySystem(gradmCBL, gradmCBL_out);
