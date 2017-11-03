@@ -952,6 +952,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 
 					if (endPointMap.at<Vec2b>(i, j)[0] == 2)	//判斷是否為端點
 					{
+
 						bool flag1 = 1, flag2 = 1, flag3 = 1;	//相鄰flag
 
 						if (endPointMap.at<Vec2b>(i, j)[1] == 1)		//8區域搜尋 - 1區
@@ -979,7 +980,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 						}
 						else if (endPointMap.at<Vec2b>(i, j)[1] == 2)		//8區域搜尋 - 2區
 						{
-							nearPoint3.at<uchar>(i, j) == 0;
+							nearPoint3.at<uchar>(i, j) = 0;
 							//NE->SE
 							if (nearPoint1.at<uchar>(i, j) == 1)
 							for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
@@ -1008,14 +1009,14 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 								}
 
 							//SE->SW
-							if (nearPoint2.at<uchar>(i, j) == 2)
+							if (nearPoint2.at<uchar>(i, j) == 1)
 							for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
 							{
 								if (graddRef.at<float>(is, js) != -1000.0f){ flag2 = 0; }
 							}
 
 							//SW->W
-							if (nearPoint3.at<uchar>(i, j) == 3)
+							if (nearPoint3.at<uchar>(i, j) == 1)
 							for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir; --is, ++nowLocation)
 							{
 								if (graddRef.at<float>(is, js) != -1000.0f){ flag3 = 0; }
@@ -1023,7 +1024,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 						}
 						else if (endPointMap.at<Vec2b>(i, j)[1] == 4)		//8區域搜尋 - 4區
 						{
-							nearPoint3.at<uchar>(i, j) == 0;
+							nearPoint3.at<uchar>(i, j) = 0;
 							//SE->SW
 							if (nearPoint1.at<uchar>(i, j) == 1)
 							for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
@@ -1065,7 +1066,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 						}
 						else if (endPointMap.at<Vec2b>(i, j)[1] == 6)		//8區域搜尋 - 6區
 						{
-							nearPoint3.at<uchar>(i, j) == 0;
+							nearPoint3.at<uchar>(i, j) = 0;
 							//SW->NW
 							if (nearPoint1.at<uchar>(i, j) == 1)
 							for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
@@ -1073,7 +1074,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 								if (graddRef.at<float>(is, js) != -1000.0f){ flag1 = 0; }
 							}
 							//NW->NE
-							if (nearPoint2.at<uchar>(i, j) == 2)
+							if (nearPoint2.at<uchar>(i, j) == 1)
 							for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
 							{
 								if (graddRef.at<float>(is, js) != -1000.0f){ flag2 = 0; }
@@ -1107,7 +1108,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 						}
 						else if (endPointMap.at<Vec2b>(i, j)[1] == 8)		//8區域搜尋 - 8區
 						{
-							nearPoint3.at<uchar>(i, j) == 0;
+							nearPoint3.at<uchar>(i, j) = 0;
 							//NW->NE
 							if (nearPoint1.at<uchar>(i, j) == 1)
 							for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
@@ -1132,7 +1133,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 						if (flag3 == 0) { nearPoint3.at<uchar>(i, j) = 0; }
 						if (nearPoint1.at<uchar>(i, j) == 0 && nearPoint2.at<uchar>(i, j) == 0 && nearPoint3.at<uchar>(i, j) == 0)
 						{
-							endPointMap.at<Vec2b>(i, j)[0] == 4;	//淘汰端點
+							endPointMap.at<Vec2b>(i, j)[0] = 4;	//淘汰端點
 						}
 					}
 				}
@@ -1161,12 +1162,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					float connectgradm = 0;		//連通目標幅值
 					float connectgradd = 0.0f;		//連通目標方向
 
-					bool flag1 = 1, flag2 = 1, flag3 = 1, flag4 = 1, flag5 = 1;	//相鄰flag
-
-					if (x == 5 && i == 468 && j == 412)
-					{
-						cout << "stop";
-					}
+					bool flag1 = 1, flag2 = 1, flag3 = 1;	//相鄰flag
 
 					/*搜尋最佳點(八區域分類)*/
 					if (endPointMap.at<Vec2b>(i, j)[1] == 1)		//8區域搜尋 - 1區
@@ -1230,7 +1226,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					}
 					else if (endPointMap.at<Vec2b>(i, j)[1] == 2)		//8區域搜尋 - 2區
 					{
-						nearPoint3.at<uchar>(i, j) == 0;
+						nearPoint3.at<uchar>(i, j) = 0;
 						//NE->SE
 						if (nearPoint1.at<uchar>(i, j) == 1)
 						for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
@@ -1343,7 +1339,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					}
 					else if (endPointMap.at<Vec2b>(i, j)[1] == 4)		//8區域搜尋 - 4區
 					{
-						nearPoint3.at<uchar>(i, j) == 0;
+						nearPoint3.at<uchar>(i, j) = 0;
 						//SE->SW
 						if (nearPoint1.at<uchar>(i, j) == 1)
 						for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
@@ -1455,7 +1451,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					}
 					else if (endPointMap.at<Vec2b>(i, j)[1] == 6)		//8區域搜尋 - 6區
 					{
-						nearPoint3.at<uchar>(i, j) == 0;
+						nearPoint3.at<uchar>(i, j) = 0;
 						//SW->NW
 						if (nearPoint1.at<uchar>(i, j) == 1)
 						for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
@@ -1566,7 +1562,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					}
 					else if (endPointMap.at<Vec2b>(i, j)[1] == 8)		//8區域搜尋 - 8區
 					{
-						nearPoint3.at<uchar>(i, j) == 0;
+						nearPoint3.at<uchar>(i, j) = 0;
 						//NW->NE
 						if (nearPoint1.at<uchar>(i, j) == 1)
 						for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
@@ -1625,7 +1621,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					if (flag3 == 0) { nearPoint3.at<uchar>(i, j) = 0; }
 					if (nearPoint1.at<uchar>(i, j) == 0 && nearPoint2.at<uchar>(i, j) == 0 && nearPoint3.at<uchar>(i, j) == 0)
 					{
-						endPointMap.at<Vec2b>(i, j)[0] == 4;	//淘汰的端點
+						endPointMap.at<Vec2b>(i, j)[0] = 4;	//淘汰的端點
 					}
 
 					//連通最佳點(四區域分類)
