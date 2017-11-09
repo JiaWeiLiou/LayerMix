@@ -70,8 +70,11 @@ void NonMaximumSuppression(InputArray _gradm, InputArray _gradd, OutputArray _gr
 /*清除異方向點*/
 void ClearDifferentDirection(InputArray _gradm, InputArray _gradd, OutputArray _gradmCDD, OutputArray _graddCDD);
 
-/*斷線連通*/
-void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCBL, OutputArray _graddCBL, int startSpace = 2, int endSpace = 5);
+/*幅值斷線連通*/
+void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCBL, OutputArray _graddCBL, int startSpace = 2, int endSpace = 5, int degree = 60, bool flag = 0);
 
 /*滯後閥值*/
 void HysteresisThreshold(InputArray _NMSgradientField_abs, OutputArray _HTedge, int upperThreshold, int lowerThreshold);
+
+/*二值斷線連通*/
+void BWConnectBreakLine(InputArray _gradmWCBL, InputArray _graddWCBL, InputArray _edgeHT, OutputArray _edgeFCBL, int startSpace = 2, int endSpace = 100, int degree = 150, bool flag = 0);

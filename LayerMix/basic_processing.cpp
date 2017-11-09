@@ -25,8 +25,7 @@ int bwlabel(InputArray _binaryImg, OutputArray _labels, int nears)
 		nears = 8;
 
 	int nobj = 0;    // number of objects found in image  
-
-	int* labeltable = new int[binaryImg.rows*binaryImg.cols];		// initialize label table with zero  
+	int *labeltable = new int[binaryImg.rows*binaryImg.cols];		// initialize label table with zero  
 	memset(labeltable, 0, binaryImg.rows*binaryImg.cols * sizeof(int));
 	int ntable = 0;
 
@@ -576,7 +575,7 @@ void ClearNoise(InputArray _binaryImg, OutputArray _clearAreaImage, int noise, i
 
 	int nobj = 0;    // number of objects found in image  
 
-	int* labeltable = new int[binaryImg.rows*binaryImg.cols];		// initialize label table with zero  
+	int *labeltable = new int[binaryImg.rows*binaryImg.cols];		// initialize label table with zero  
 	memset(labeltable, 0, binaryImg.rows*binaryImg.cols * sizeof(int));
 	int ntable = 0;
 
@@ -913,8 +912,8 @@ void ClearDifferentDirection(InputArray _gradm, InputArray _gradd, OutputArray _
 			}
 }
 
-/*斷線連通*/
-void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCBL, OutputArray _graddCBL, int startSpace,int endSpace)
+/*幅值斷線連通*/
+void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCBL, OutputArray _graddCBL, int startSpace, int endSpace, int degree, bool flag)
 {
 	Mat gradm = _gradm.getMat();
 	CV_Assert(gradm.type() == CV_8UC1);
@@ -961,38 +960,38 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 							if (nearPoint1.at<uchar>(i, j) == 1)
 								for (int is = ir - x, js = jr, nowLocation = x; js <= jr + x - 1; ++js, ++nowLocation)
 								{
-									if (graddRef.at<float>(is, js) != -1000.0f)	{ flag1 = 0; }
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag1 = 0; }
 								}
 
 							//NE->SE
 							if (nearPoint2.at<uchar>(i, j) == 1)
-							for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f)	{ flag2 = 0; }
-							}
+								for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag2 = 0; }
+								}
 
 							//SE->S
 							if (nearPoint3.at<uchar>(i, j) == 1)
-							for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr; --js, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f) { flag3 = 0; }
-							}
+								for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr; --js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag3 = 0; }
+								}
 						}
 						else if (endPointMap.at<Vec2b>(i, j)[1] == 2)		//8區域搜尋 - 2區
 						{
 							nearPoint3.at<uchar>(i, j) = 0;
 							//NE->SE
 							if (nearPoint1.at<uchar>(i, j) == 1)
-							for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f)	{ flag1 = 0; }
-							}
+								for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag1 = 0; }
+								}
 							//SE->SW
 							if (nearPoint2.at<uchar>(i, j) == 1)
-							for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f){ flag2 = 0; }
-							}
+								for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag2 = 0; }
+								}
 							//SW
 							if (graddRef.at<float>(ir + x, jr - x) != -1000.0f && nearPoint2.at<uchar>(i, j) == 1)
 							{
@@ -1005,38 +1004,38 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 							if (nearPoint1.at<uchar>(i, j) == 1)
 								for (int is = ir, js = jr + x, nowLocation = x; is <= ir + x - 1; ++is, ++nowLocation)
 								{
-									if (graddRef.at<float>(is, js) != -1000.0f){ flag1 = 0; }
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag1 = 0; }
 								}
 
 							//SE->SW
 							if (nearPoint2.at<uchar>(i, j) == 1)
-							for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f){ flag2 = 0; }
-							}
+								for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag2 = 0; }
+								}
 
 							//SW->W
 							if (nearPoint3.at<uchar>(i, j) == 1)
-							for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir; --is, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f){ flag3 = 0; }
-							}
+								for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir; --is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag3 = 0; }
+								}
 						}
 						else if (endPointMap.at<Vec2b>(i, j)[1] == 4)		//8區域搜尋 - 4區
 						{
 							nearPoint3.at<uchar>(i, j) = 0;
 							//SE->SW
 							if (nearPoint1.at<uchar>(i, j) == 1)
-							for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f){ flag1 = 0; }
-							}
+								for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag1 = 0; }
+								}
 							//SW->NW
 							if (nearPoint2.at<uchar>(i, j) == 1)
-							for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f){ flag2 = 0; }
-							}
+								for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag2 = 0; }
+								}
 							//NW
 							if (graddRef.at<float>(ir - x, jr - x) != -1000.0f && nearPoint2.at<uchar>(i, j) == 1)
 							{
@@ -1049,36 +1048,36 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 							if (nearPoint1.at<uchar>(i, j) == 1)
 								for (int is = ir + x, js = jr, nowLocation = x; js >= jr - x + 1; --js, ++nowLocation)
 								{
-									if (graddRef.at<float>(is, js) != -1000.0f)	{ flag1 = 0; }
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag1 = 0; }
 								}
 							//SW->NW
 							if (nearPoint2.at<uchar>(i, j) == 1)
-							for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f){ flag2 = 0; }
-							}
+								for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag2 = 0; }
+								}
 							//NW->N
 							if (nearPoint3.at<uchar>(i, j) == 1)
-							for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr; ++js, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f){ flag3 = 0; }
-							}
+								for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr; ++js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag3 = 0; }
+								}
 						}
 						else if (endPointMap.at<Vec2b>(i, j)[1] == 6)		//8區域搜尋 - 6區
 						{
 							nearPoint3.at<uchar>(i, j) = 0;
 							//SW->NW
 							if (nearPoint1.at<uchar>(i, j) == 1)
-							for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f){ flag1 = 0; }
-							}
+								for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag1 = 0; }
+								}
 							//NW->NE
 							if (nearPoint2.at<uchar>(i, j) == 1)
-							for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f){ flag2 = 0; }
-							}
+								for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag2 = 0; }
+								}
 							//NE
 							if (graddRef.at<float>(ir - x, jr + x) != -1000.0f && nearPoint2.at<uchar>(i, j) == 1)
 							{
@@ -1091,34 +1090,34 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 							if (nearPoint1.at<uchar>(i, j) == 1)
 								for (int is = ir, js = jr - x, nowLocation = x; is >= ir - x + 1; --is, ++nowLocation)
 								{
-									if (graddRef.at<float>(is, js) != -1000.0f)	{ flag1 = 0; }
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag1 = 0; }
 								}
 							//NW->NE
 							if (nearPoint2.at<uchar>(i, j) == 1)
-							for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f){ flag2 = 0; }
-							}
+								for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag2 = 0; }
+								}
 							//NE->E
 							if (nearPoint3.at<uchar>(i, j) == 1)
-							for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir; ++is, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f){ flag3 = 0; }
-							}
+								for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir; ++is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag3 = 0; }
+								}
 						}
 						else if (endPointMap.at<Vec2b>(i, j)[1] == 8)		//8區域搜尋 - 8區
 						{
 							nearPoint3.at<uchar>(i, j) = 0;
 							//NW->NE
 							if (nearPoint1.at<uchar>(i, j) == 1)
-							for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f){ flag1 = 0; }
-							}
+								for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f) { flag1 = 0; }
+								}
 							//NE->SE
 							for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
 							{
-								if (graddRef.at<float>(is, js) != -1000.0f){ flag2 = 0; }
+								if (graddRef.at<float>(is, js) != -1000.0f) { flag2 = 0; }
 							}
 							//SE
 							if (graddRef.at<float>(ir + x, jr + x) != -1000.0f && nearPoint2.at<uchar>(i, j) == 1)
@@ -1139,10 +1138,15 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 				}
 		}
 	}
-	for (int x = startSpace; x <= endSpace; ++x)
+
+
+	for (int x = startSpace; x <= endSpace; ++x)	//斷線連通
 	{
 		Mat graddRef;
 		copyMakeBorder(gradd, graddRef, x - 1, x - 1, x - 1, x - 1, BORDER_CONSTANT, Scalar(-1000.0f));
+
+		Mat endPointMapRef;
+		copyMakeBorder(endPointMap, endPointMapRef, x - 1, x - 1, x - 1, x - 1, BORDER_CONSTANT, Scalar(0,0));
 
 		/*搜尋並連通線*/
 		for (int i = 1; i < gradd.rows - 1; ++i)		//不搜尋影像邊界
@@ -1164,453 +1168,909 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 
 					bool flag1 = 1, flag2 = 1, flag3 = 1;	//相鄰flag
 
-					/*搜尋最佳點(八區域分類)*/
-					if (endPointMap.at<Vec2b>(i, j)[1] == 1)		//8區域搜尋 - 1區
+					if (flag)		//只連通端點
 					{
-						//N->NE
-						if (nearPoint1.at<uchar>(i, j) == 1)
-							for (int is = ir - x, js = jr, nowLocation = x; js <= jr + x - 1; ++js, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
+						/*搜尋最佳點(八區域分類)*/
+						if (endPointMap.at<Vec2b>(i, j)[1] == 1)		//8區域搜尋 - 1區
+						{
+							//N->NE
+							if (nearPoint1.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr, nowLocation = x; js <= jr + x - 1; ++js, ++nowLocation)
 								{
-									flag1 = 0;
-
-									divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
-									divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-									if (divtheta < mintheta)
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
 									{
-										mintheta = divtheta;
-										searchLocation = 2;
-										k = nowLocation;
+										flag1 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 2;
+											k = nowLocation;
+										}
 									}
 								}
-							}
 
-						//NE->SE
-						if (nearPoint2.at<uchar>(i, j) == 1)
-						for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
-						{
-							if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-							{
-								flag2 = 0;
-
-								divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
-								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-								if (divtheta < mintheta)
+							//NE->SE
+							if (nearPoint2.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
 								{
-									mintheta = divtheta;
-									searchLocation = 3;
-									k = nowLocation;
-								}
-							}
-						}
-
-						//SE->S
-						if (nearPoint3.at<uchar>(i, j) == 1)
-						for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr; --js, ++nowLocation)
-						{
-							if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-							{
-								flag3 = 0;
-
-								divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
-								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-								if (divtheta < mintheta)
-								{
-									mintheta = divtheta;
-									searchLocation = 4;
-									k = nowLocation;
-								}
-							}
-						}
-					}
-					else if (endPointMap.at<Vec2b>(i, j)[1] == 2)		//8區域搜尋 - 2區
-					{
-						nearPoint3.at<uchar>(i, j) = 0;
-						//NE->SE
-						if (nearPoint1.at<uchar>(i, j) == 1)
-						for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
-						{
-							if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-							{
-								flag1 = 0;
-
-								divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
-								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-								if (divtheta < mintheta)
-								{
-									mintheta = divtheta;
-									searchLocation = 3;
-									k = nowLocation;
-								}
-							}
-						}
-						//SE->SW
-						if (nearPoint2.at<uchar>(i, j) == 1)
-						for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
-						{
-							if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-							{
-								flag2 = 0;
-
-								divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
-								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-								if (divtheta < mintheta)
-								{
-									mintheta = divtheta;
-									searchLocation = 4;
-									k = nowLocation;
-								}
-							}
-						}
-						//SW
-						if (graddRef.at<float>(ir + x, jr - x) != -1000.0f && nearPoint2.at<uchar>(i, j) == 1 && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-						{
-							flag2 = 0;
-
-							divtheta = abs(((graddRef.at<float>(ir + x, jr - x) + CV_PI) / CV_PI)*180.0f - theta0);
-							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-							if (divtheta < mintheta)
-							{
-								mintheta = divtheta;
-								searchLocation = 1;
-								k = 0;
-							}
-						}
-					}
-					else if (endPointMap.at<Vec2b>(i, j)[1] == 3)		//8區域搜尋 - 3區
-					{
-						//E->SE
-						if (nearPoint1.at<uchar>(i, j) == 1)
-							for (int is = ir, js = jr + x, nowLocation = x; is <= ir + x - 1; ++is, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-								{
-									flag1 = 0;
-
-									divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
-									divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-									if (divtheta < mintheta)
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
 									{
-										mintheta = divtheta;
-										searchLocation = 3;
-										k = nowLocation;
+										flag2 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 3;
+											k = nowLocation;
+										}
 									}
 								}
-							}
 
-						//SE->SW
-						if (nearPoint2.at<uchar>(i, j) == 1)
-						for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
+							//SE->S
+							if (nearPoint3.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr; --js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag3 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 4;
+											k = nowLocation;
+										}
+									}
+								}
+						}
+						else if (endPointMap.at<Vec2b>(i, j)[1] == 2)		//8區域搜尋 - 2區
 						{
-							if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
+							nearPoint3.at<uchar>(i, j) = 0;
+							//NE->SE
+							if (nearPoint1.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag1 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 3;
+											k = nowLocation;
+										}
+									}
+								}
+							//SE->SW
+							if (nearPoint2.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag2 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 4;
+											k = nowLocation;
+										}
+									}
+								}
+							//SW
+							if (graddRef.at<float>(ir + x, jr - x) != -1000.0f && nearPoint2.at<uchar>(i, j) == 1 && endPointMapRef.at<Vec2b>(ir + x, jr - x)[0] == 2)
 							{
 								flag2 = 0;
 
-								divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
-								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-								if (divtheta < mintheta)
-								{
-									mintheta = divtheta;
-									searchLocation = 4;
-									k = nowLocation;
-								}
-							}
-						}
-
-						//SW->W
-						if (nearPoint3.at<uchar>(i, j) == 1)
-						for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir; --is, ++nowLocation)
-						{
-							if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-							{
-								flag3 = 0;
-
-								divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+								divtheta = abs(((graddRef.at<float>(ir + x, jr - x) + CV_PI) / CV_PI)*180.0f - theta0);
 								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 								if (divtheta < mintheta)
 								{
 									mintheta = divtheta;
 									searchLocation = 1;
-									k = nowLocation;
+									k = 0;
 								}
 							}
 						}
-					}
-					else if (endPointMap.at<Vec2b>(i, j)[1] == 4)		//8區域搜尋 - 4區
-					{
-						nearPoint3.at<uchar>(i, j) = 0;
-						//SE->SW
-						if (nearPoint1.at<uchar>(i, j) == 1)
-						for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
+						else if (endPointMap.at<Vec2b>(i, j)[1] == 3)		//8區域搜尋 - 3區
 						{
+							//E->SE
+							if (nearPoint1.at<uchar>(i, j) == 1)
+								for (int is = ir, js = jr + x, nowLocation = x; is <= ir + x - 1; ++is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag1 = 0;
 
-							if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 3;
+											k = nowLocation;
+										}
+									}
+								}
+
+							//SE->SW
+							if (nearPoint2.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag2 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 4;
+											k = nowLocation;
+										}
+									}
+								}
+
+							//SW->W
+							if (nearPoint3.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir; --is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag3 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 1;
+											k = nowLocation;
+										}
+									}
+								}
+						}
+						else if (endPointMap.at<Vec2b>(i, j)[1] == 4)		//8區域搜尋 - 4區
+						{
+							nearPoint3.at<uchar>(i, j) = 0;
+							//SE->SW
+							if (nearPoint1.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
+								{
+
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag1 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 4;
+											k = nowLocation;
+										}
+									}
+								}
+							//SW->NW
+							if (nearPoint2.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag2 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 1;
+											k = nowLocation;
+										}
+									}
+								}
+							//NW
+							if (graddRef.at<float>(ir - x, jr - x) != -1000.0f && nearPoint2.at<uchar>(i, j) == 1 && endPointMapRef.at<Vec2b>(ir - x, jr - x)[0] == 2)
 							{
-								flag1 = 0;
+								flag2 = 0;
 
-								divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+								divtheta = abs(((graddRef.at<float>(ir - x, jr - x) + CV_PI) / CV_PI)*180.0f - theta0);
+								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+								if (divtheta < mintheta)
+								{
+									mintheta = divtheta;
+									searchLocation = 2;
+									k = 0;
+								}
+							}
+						}
+						else if (endPointMap.at<Vec2b>(i, j)[1] == 5)		//8區域搜尋 - 5區
+						{
+							//S->SW
+							if (nearPoint1.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr, nowLocation = x; js >= jr - x + 1; --js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f  && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag1 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 4;
+											k = nowLocation;
+										}
+									}
+								}
+							//SW->NW
+							if (nearPoint2.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f  && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag2 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 1;
+											k = nowLocation;
+										}
+									}
+								}
+							//NW->N
+							if (nearPoint3.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr; ++js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f  && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag3 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 2;
+											k = nowLocation;
+										}
+									}
+								}
+						}
+						else if (endPointMap.at<Vec2b>(i, j)[1] == 6)		//8區域搜尋 - 6區
+						{
+							nearPoint3.at<uchar>(i, j) = 0;
+							//SW->NW
+							if (nearPoint1.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f  && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag1 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 1;
+											k = nowLocation;
+										}
+									}
+								}
+							//NW->NE
+							if (nearPoint2.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f  && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag2 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 2;
+											k = nowLocation;
+										}
+									}
+								}
+							//NE
+							if (graddRef.at<float>(ir - x, jr + x) != -1000.0f && nearPoint2.at<uchar>(i, j) == 1 && endPointMapRef.at<Vec2b>(ir - x, jr + x)[0] == 2)
+							{
+								flag2 = 0;
+
+								divtheta = abs(((graddRef.at<float>(ir - x, jr + x) + CV_PI) / CV_PI)*180.0f - theta0);
+								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+								if (divtheta < mintheta)
+								{
+									mintheta = divtheta;
+									searchLocation = 3;
+									k = 0;
+								}
+							}
+						}
+						else if (endPointMap.at<Vec2b>(i, j)[1] == 7)		//8區域搜尋 - 7區
+						{
+							//W->NW
+							if (nearPoint1.at<uchar>(i, j) == 1)
+								for (int is = ir, js = jr - x, nowLocation = x; is >= ir - x + 1; --is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f  && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag1 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 1;
+											k = nowLocation;
+										}
+									}
+								}
+							//NW->NE
+							if (nearPoint2.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f  && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag2 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 2;
+											k = nowLocation;
+										}
+									}
+								}
+							//NE->E
+							if (nearPoint3.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir; ++is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f  && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag3 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 3;
+											k = nowLocation;
+										}
+									}
+								}
+						}
+						else if (endPointMap.at<Vec2b>(i, j)[1] == 8)		//8區域搜尋 - 8區
+						{
+							nearPoint3.at<uchar>(i, j) = 0;
+							//NW->NE
+							if (nearPoint1.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f  && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag1 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 2;
+											k = nowLocation;
+										}
+									}
+								}
+							//NE->SE
+							if (nearPoint2.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] == 2)
+									{
+										flag2 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 3;
+											k = nowLocation;
+										}
+									}
+								}
+							//SE
+							if (graddRef.at<float>(ir + x, jr + x) != -1000.0f && nearPoint2.at<uchar>(i, j) == 1 && endPointMapRef.at<Vec2b>(ir + x, jr + x)[0] == 2)
+							{
+								flag2 = 0;
+
+								divtheta = abs(((graddRef.at<float>(ir + x, jr + x) + CV_PI) / CV_PI)*180.0f - theta0);
 								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 								if (divtheta < mintheta)
 								{
 									mintheta = divtheta;
 									searchLocation = 4;
-									k = nowLocation;
+									k = 0;
 								}
-							}
-						}
-						//SW->NW
-						if (nearPoint2.at<uchar>(i, j) == 1)
-						for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
-						{
-							if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-							{
-								flag2 = 0;
-
-								divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
-								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-								if (divtheta < mintheta)
-								{
-									mintheta = divtheta;
-									searchLocation = 1;
-									k = nowLocation;
-								}
-							}
-						}
-						//NW
-						if (graddRef.at<float>(ir - x, jr - x) != -1000.0f && nearPoint2.at<uchar>(i, j) == 1 && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-						{
-							flag2 = 0;
-
-							divtheta = abs(((graddRef.at<float>(ir - x, jr - x) + CV_PI) / CV_PI)*180.0f - theta0);
-							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-							if (divtheta < mintheta)
-							{
-								mintheta = divtheta;
-								searchLocation = 2;
-								k = 0;
 							}
 						}
 					}
-					else if (endPointMap.at<Vec2b>(i, j)[1] == 5)		//8區域搜尋 - 5區
+					else	//連通端點或線段
 					{
-						//S->SW
-						if (nearPoint1.at<uchar>(i, j) == 1)
-							for (int is = ir + x, js = jr, nowLocation = x; js >= jr - x + 1; --js, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
+						/*搜尋最佳點(八區域分類)*/
+						if (endPointMap.at<Vec2b>(i, j)[1] == 1)		//8區域搜尋 - 1區
+						{
+							//N->NE
+							if (nearPoint1.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr, nowLocation = x; js <= jr + x - 1; ++js, ++nowLocation)
 								{
-									flag1 = 0;
-
-									divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
-									divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-									if (divtheta < mintheta)
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
 									{
-										mintheta = divtheta;
-										searchLocation = 4;
-										k = nowLocation;
+										flag1 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 2;
+											k = nowLocation;
+										}
 									}
 								}
-							}
-						//SW->NW
-						if (nearPoint2.at<uchar>(i, j) == 1)
-						for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
-						{
-							if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-							{
-								flag2 = 0;
 
-								divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
-								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-								if (divtheta < mintheta)
+							//NE->SE
+							if (nearPoint2.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
 								{
-									mintheta = divtheta;
-									searchLocation = 1;
-									k = nowLocation;
-								}
-							}
-						}
-						//NW->N
-						if (nearPoint3.at<uchar>(i, j) == 1)
-						for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr; ++js, ++nowLocation)
-						{
-							if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-							{
-								flag3 = 0;
-
-								divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
-								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-								if (divtheta < mintheta)
-								{
-									mintheta = divtheta;
-									searchLocation = 2;
-									k = nowLocation;
-								}
-							}
-						}
-					}
-					else if (endPointMap.at<Vec2b>(i, j)[1] == 6)		//8區域搜尋 - 6區
-					{
-						nearPoint3.at<uchar>(i, j) = 0;
-						//SW->NW
-						if (nearPoint1.at<uchar>(i, j) == 1)
-						for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
-						{
-							if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-							{
-								flag1 = 0;
-
-								divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
-								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-								if (divtheta < mintheta)
-								{
-									mintheta = divtheta;
-									searchLocation = 1;
-									k = nowLocation;
-								}
-							}
-						}
-						//NW->NE
-						if (nearPoint2.at<uchar>(i, j) == 1)
-						for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
-						{
-							if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-							{
-								flag2 = 0;
-
-								divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
-								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-								if (divtheta < mintheta)
-								{
-									mintheta = divtheta;
-									searchLocation = 2;
-									k = nowLocation;
-								}
-							}
-						}
-						//NE
-						if (graddRef.at<float>(ir - x, jr + x) != -1000.0f && nearPoint2.at<uchar>(i, j) == 1 && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-						{
-							flag2 = 0;
-
-							divtheta = abs(((graddRef.at<float>(ir - x, jr + x) + CV_PI) / CV_PI)*180.0f - theta0);
-							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-							if (divtheta < mintheta)
-							{
-								mintheta = divtheta;
-								searchLocation = 3;
-								k = 0;
-							}
-						}
-					}
-					else if (endPointMap.at<Vec2b>(i, j)[1] == 7)		//8區域搜尋 - 7區
-					{
-						//W->NW
-						if (nearPoint1.at<uchar>(i, j) == 1)
-							for (int is = ir, js = jr - x, nowLocation = x; is >= ir - x + 1; --is, ++nowLocation)
-							{
-								if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-								{
-									flag1 = 0;
-
-									divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
-									divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-									if (divtheta < mintheta)
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
 									{
-										mintheta = divtheta;
-										searchLocation = 1;
-										k = nowLocation;
+										flag2 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 3;
+											k = nowLocation;
+										}
 									}
 								}
-							}
-						//NW->NE
-						if (nearPoint2.at<uchar>(i, j) == 1)
-						for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
+
+							//SE->S
+							if (nearPoint3.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr; --js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag3 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 4;
+											k = nowLocation;
+										}
+									}
+								}
+						}
+						else if (endPointMap.at<Vec2b>(i, j)[1] == 2)		//8區域搜尋 - 2區
 						{
-							if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
+							nearPoint3.at<uchar>(i, j) = 0;
+							//NE->SE
+							if (nearPoint1.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag1 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 3;
+											k = nowLocation;
+										}
+									}
+								}
+							//SE->SW
+							if (nearPoint2.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag2 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 4;
+											k = nowLocation;
+										}
+									}
+								}
+							//SW
+							if (graddRef.at<float>(ir + x, jr - x) != -1000.0f && nearPoint2.at<uchar>(i, j) == 1 && endPointMapRef.at<Vec2b>(ir + x, jr - x)[0] != 1 && endPointMapRef.at<Vec2b>(ir + x, jr - x)[0] != 4)
 							{
 								flag2 = 0;
 
-								divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+								divtheta = abs(((graddRef.at<float>(ir + x, jr - x) + CV_PI) / CV_PI)*180.0f - theta0);
+								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+								if (divtheta < mintheta)
+								{
+									mintheta = divtheta;
+									searchLocation = 1;
+									k = 0;
+								}
+							}
+						}
+						else if (endPointMap.at<Vec2b>(i, j)[1] == 3)		//8區域搜尋 - 3區
+						{
+							//E->SE
+							if (nearPoint1.at<uchar>(i, j) == 1)
+								for (int is = ir, js = jr + x, nowLocation = x; is <= ir + x - 1; ++is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag1 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 3;
+											k = nowLocation;
+										}
+									}
+								}
+
+							//SE->SW
+							if (nearPoint2.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag2 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 4;
+											k = nowLocation;
+										}
+									}
+								}
+
+							//SW->W
+							if (nearPoint3.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir; --is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag3 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 1;
+											k = nowLocation;
+										}
+									}
+								}
+						}
+						else if (endPointMap.at<Vec2b>(i, j)[1] == 4)		//8區域搜尋 - 4區
+						{
+							nearPoint3.at<uchar>(i, j) = 0;
+							//SE->SW
+							if (nearPoint1.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr + x, nowLocation = 0; js >= jr - x + 1; --js, ++nowLocation)
+								{
+
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag1 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 4;
+											k = nowLocation;
+										}
+									}
+								}
+							//SW->NW
+							if (nearPoint2.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag2 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 1;
+											k = nowLocation;
+										}
+									}
+								}
+							//NW
+							if (graddRef.at<float>(ir - x, jr - x) != -1000.0f && nearPoint2.at<uchar>(i, j) == 1 && endPointMapRef.at<Vec2b>(ir - x, jr - x)[0] != 1 && endPointMapRef.at<Vec2b>(ir - x, jr - x)[0] != 4)
+							{
+								flag2 = 0;
+
+								divtheta = abs(((graddRef.at<float>(ir - x, jr - x) + CV_PI) / CV_PI)*180.0f - theta0);
 								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 								if (divtheta < mintheta)
 								{
 									mintheta = divtheta;
 									searchLocation = 2;
-									k = nowLocation;
+									k = 0;
 								}
 							}
 						}
-						//NE->E
-						if (nearPoint3.at<uchar>(i, j) == 1)
-						for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir; ++is, ++nowLocation)
+						else if (endPointMap.at<Vec2b>(i, j)[1] == 5)		//8區域搜尋 - 5區
 						{
-							if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-							{
-								flag3 = 0;
+							//S->SW
+							if (nearPoint1.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr, nowLocation = x; js >= jr - x + 1; --js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag1 = 0;
 
-								divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 4;
+											k = nowLocation;
+										}
+									}
+								}
+							//SW->NW
+							if (nearPoint2.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag2 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 1;
+											k = nowLocation;
+										}
+									}
+								}
+							//NW->N
+							if (nearPoint3.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr; ++js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag3 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 2;
+											k = nowLocation;
+										}
+									}
+								}
+						}
+						else if (endPointMap.at<Vec2b>(i, j)[1] == 6)		//8區域搜尋 - 6區
+						{
+							nearPoint3.at<uchar>(i, j) = 0;
+							//SW->NW
+							if (nearPoint1.at<uchar>(i, j) == 1)
+								for (int is = ir + x, js = jr - x, nowLocation = 0; is >= ir - x + 1; --is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag1 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 1;
+											k = nowLocation;
+										}
+									}
+								}
+							//NW->NE
+							if (nearPoint2.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag2 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 2;
+											k = nowLocation;
+										}
+									}
+								}
+							//NE
+							if (graddRef.at<float>(ir - x, jr + x) != -1000.0f && nearPoint2.at<uchar>(i, j) == 1 && endPointMapRef.at<Vec2b>(ir - x, jr + x)[0] != 1 && endPointMapRef.at<Vec2b>(ir - x, jr + x)[0] != 4)
+							{
+								flag2 = 0;
+
+								divtheta = abs(((graddRef.at<float>(ir - x, jr + x) + CV_PI) / CV_PI)*180.0f - theta0);
 								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 								if (divtheta < mintheta)
 								{
 									mintheta = divtheta;
 									searchLocation = 3;
-									k = nowLocation;
+									k = 0;
 								}
 							}
 						}
-					}
-					else if (endPointMap.at<Vec2b>(i, j)[1] == 8)		//8區域搜尋 - 8區
-					{
-						nearPoint3.at<uchar>(i, j) = 0;
-						//NW->NE
-						if (nearPoint1.at<uchar>(i, j) == 1)
-						for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
+						else if (endPointMap.at<Vec2b>(i, j)[1] == 7)		//8區域搜尋 - 7區
 						{
-							if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-							{
-								flag1 = 0;
-
-								divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
-								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-								if (divtheta < mintheta)
+							//W->NW
+							if (nearPoint1.at<uchar>(i, j) == 1)
+								for (int is = ir, js = jr - x, nowLocation = x; is >= ir - x + 1; --is, ++nowLocation)
 								{
-									mintheta = divtheta;
-									searchLocation = 2;
-									k = nowLocation;
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag1 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 1;
+											k = nowLocation;
+										}
+									}
 								}
-							}
+							//NW->NE
+							if (nearPoint2.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag2 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 2;
+											k = nowLocation;
+										}
+									}
+								}
+							//NE->E
+							if (nearPoint3.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir; ++is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag3 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 3;
+											k = nowLocation;
+										}
+									}
+								}
 						}
-						//NE->SE
-						if (nearPoint2.at<uchar>(i, j) == 1)
-						for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
+						else if (endPointMap.at<Vec2b>(i, j)[1] == 8)		//8區域搜尋 - 8區
 						{
-							if (graddRef.at<float>(is, js) != -1000.0f && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
+							nearPoint3.at<uchar>(i, j) = 0;
+							//NW->NE
+							if (nearPoint1.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr - x, nowLocation = 0; js <= jr + x - 1; ++js, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag1 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 2;
+											k = nowLocation;
+										}
+									}
+								}
+							//NE->SE
+							if (nearPoint2.at<uchar>(i, j) == 1)
+								for (int is = ir - x, js = jr + x, nowLocation = 0; is <= ir + x - 1; ++is, ++nowLocation)
+								{
+									if (graddRef.at<float>(is, js) != -1000.0f && endPointMapRef.at<Vec2b>(is, js)[0] != 1 && endPointMapRef.at<Vec2b>(is, js)[0] != 4)
+									{
+										flag2 = 0;
+
+										divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+										divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
+										if (divtheta < mintheta)
+										{
+											mintheta = divtheta;
+											searchLocation = 3;
+											k = nowLocation;
+										}
+									}
+								}
+							//SE
+							if (graddRef.at<float>(ir + x, jr + x) != -1000.0f && nearPoint2.at<uchar>(i, j) == 1 && endPointMapRef.at<Vec2b>(ir + x, jr + x)[0] != 1 && endPointMapRef.at<Vec2b>(ir + x, jr + x)[0] != 4)
 							{
 								flag2 = 0;
 
-								divtheta = abs(((graddRef.at<float>(is, js) + CV_PI) / CV_PI)*180.0f - theta0);
+								divtheta = abs(((graddRef.at<float>(ir + x, jr + x) + CV_PI) / CV_PI)*180.0f - theta0);
 								divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
 								if (divtheta < mintheta)
 								{
 									mintheta = divtheta;
-									searchLocation = 3;
-									k = nowLocation;
+									searchLocation = 4;
+									k = 0;
 								}
-							}
-						}
-						//SE
-						if (graddRef.at<float>(ir + x, jr + x) != -1000.0f && nearPoint2.at<uchar>(i, j) == 1 && endPointMap.at<Vec2b>(i, j)[0] != 1 && endPointMap.at<Vec2b>(i, j)[0] != 4)
-						{
-							flag2 = 0;
-
-							divtheta = abs(((graddRef.at<float>(ir + x, jr + x) + CV_PI) / CV_PI)*180.0f - theta0);
-							divtheta = divtheta > 180 ? (360 - divtheta) : divtheta;
-							if (divtheta < mintheta)
-							{
-								mintheta = divtheta;
-								searchLocation = 4;
-								k = 0;
 							}
 						}
 					}
@@ -1625,7 +2085,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					}
 
 					//連通最佳點(四區域分類)
-					if (searchLocation == 1 && mintheta <= 60)		//4區域連通 - SW區
+					if (searchLocation == 1 && mintheta <= degree)		//4區域連通 - SW區
 					{
 						connectgradm = gradm.at<uchar>(i + x - k, j - x);		//連通目標幅值
 						connectgradd = gradd.at<float>(i + x - k, j - x);		//連通目標方向
@@ -1655,7 +2115,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 							++step;
 						}
 					}
-					else if (searchLocation == 2 && mintheta <= 60)		//4區域連通 - NW區
+					else if (searchLocation == 2 && mintheta <= degree)		//4區域連通 - NW區
 					{
 						connectgradm = gradm.at<uchar>(i - x, j - x + k);		//連通目標幅值
 						connectgradd = gradd.at<float>(i - x, j - x + k);		//連通目標方向
@@ -1685,7 +2145,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 							++step;
 						}
 					}
-					else if (searchLocation == 3 && mintheta <= 60)		//4區域連通 - NE區
+					else if (searchLocation == 3 && mintheta <= degree)		//4區域連通 - NE區
 					{
 						connectgradm = gradm.at<uchar>(i - x + k, j + x);		//連通目標幅值
 						connectgradd = gradd.at<float>(i - x + k, j + x);		//連通目標方向
@@ -1715,7 +2175,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 							++step;
 						}
 					}
-					else if (searchLocation == 4 && mintheta <= 60)		//4區域連通 - SE區
+					else if (searchLocation == 4 && mintheta <= degree)		//4區域連通 - SE區
 					{
 						connectgradm = gradm.at<uchar>(i + x, j + x - k);		//連通目標幅值
 						connectgradd = gradd.at<float>(i + x, j + x - k);		//連通目標方向
@@ -1842,4 +2302,49 @@ void HysteresisThreshold(InputArray _NMSgradientField_abs, OutputArray _HTedge, 
 		}
 	delete[] labeltable;
 	labeltable = nullptr;
+}
+
+/*二值斷線連通*/
+void BWConnectBreakLine(InputArray _gradmWCBL, InputArray _graddWCBL, InputArray _edgeHT, OutputArray _edgeFCBL, int startSpace, int endSpace, int degree, bool flag)
+{
+	Mat gradmWCBL = _gradmWCBL.getMat();
+	CV_Assert(gradmWCBL.type() == CV_8UC1);
+
+	Mat graddWCBL = _graddWCBL.getMat();
+	CV_Assert(graddWCBL.type() == CV_32FC1);
+
+	Mat edgeHT = _edgeHT.getMat();
+	CV_Assert(edgeHT.type() == CV_8UC1);
+
+	_edgeFCBL.create(edgeHT.size(), CV_8UC1);
+	Mat edgeFCBL = _edgeFCBL.getMat();
+
+
+	Mat gradm(gradmWCBL.size(), CV_8UC1);
+	Mat gradd(graddWCBL.size(), CV_32FC1);
+
+	for (int i = 0; i < edgeHT.rows; ++i)
+		for (int j = 0; j < edgeHT.cols; ++j)
+		{
+			if (edgeHT.at<uchar>(i, j) == 255)
+			{
+				gradm.at<uchar>(i, j) = gradmWCBL.at<uchar>(i, j);
+				gradd.at<float>(i, j) = graddWCBL.at<float>(i, j);
+			}
+			else
+			{
+				gradm.at<uchar>(i, j) = 0;
+				gradd.at<float>(i, j) = -1000.0f;
+			}
+		}
+
+	Mat gradmCBL, graddCBL;
+	ConnectBreakLine(gradm, gradd, gradmCBL, graddCBL, startSpace, endSpace, degree, flag);
+
+	for (int i = 0; i < graddCBL.rows; ++i)
+		for (int j = 0; j < graddCBL.cols; ++j)
+		{
+			if (graddCBL.at<float>(i, j) != -1000.0f) { edgeFCBL.at<uchar>(i, j) = 255; }
+			else { edgeFCBL.at<uchar>(i, j) = 0; }
+		}
 }
