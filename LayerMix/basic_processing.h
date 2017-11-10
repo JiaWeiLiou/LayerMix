@@ -78,8 +78,8 @@ void ClearDifferentDirection(InputArray _gradm, InputArray _gradd, OutputArray _
 // degree     -> 容忍誤差角度
 // flagT = 0  -> 只搜尋端點
 // flagT = 1  -> 可搜尋端點、線段點、分岔點
-// flagD = 0  -> 只搜尋90度方向
-// flagD = 1  -> 可搜尋180度方向
+// flagD = 0  -> 只搜尋90度範圍
+// flagD = 1  -> 可搜尋180度範圍
 void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCBL, OutputArray _graddCBL, int startSpace = 2, int endSpace = 5, int degree = 60, int flagT = 0, bool flagD = 0);
 
 /*滯後閥值*/
