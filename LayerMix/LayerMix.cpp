@@ -192,7 +192,7 @@ int main()
 	/*初步斷線連通*/
 
 	Mat gradmWCBL, graddWCBL;			//斷線連通(8UC1、32FC1)
-	ConnectBreakLine(gradmCDD, graddCDD, gradmWCBL, graddWCBL, 2, 3, 60, 1);
+	ConnectBreakLine(gradmCDD, graddCDD, gradmWCBL, graddWCBL, 2, 3, 60, 1, 1);
 
 	Mat gradmWCBL_out, graddWCBL_out, gradfWCBL_out;		//輸出用(8UC1 or 8UC3)
 	DrawAbsGraySystem(gradmWCBL, gradmWCBL_out);
@@ -216,7 +216,7 @@ int main()
 	/*強制斷線連通*/
 
 	Mat edgeFCBL;		//強制斷線連通(8UC1)
-	BWConnectBreakLine(gradmWCBL, graddWCBL, edgeHT, edgeFCBL, 2, 5, 90, 0);
+	BWConnectBreakLine(gradmWCBL, graddWCBL, edgeHT, edgeFCBL, 2, 5, 90, 0, 1);
 	string edgefcblOutfile = filepath + "\\" + infilename + "_11_FCBL.png";			//強制斷線連通
 	imwrite(edgefcblOutfile, edgeFCBL);
 

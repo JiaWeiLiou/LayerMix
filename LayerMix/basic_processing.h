@@ -18,7 +18,9 @@ int bwlabel(InputArray _binaryImg, OutputArray _labels, int nears);
 //  1 -- Isolated Point
 //  2 -- EndPoint 
 //  3 -- Line Point
-//  4 -- Out of Endpoint 
+//  4 -- Bifurcation point
+//  5 -- Out of Endpoint 
+
 // channel 2 put the neighborhood direction at end of Line Point
 //  0 -- None
 //  1 - 8 -- Location of neighborhood point
@@ -70,11 +72,18 @@ void NonMaximumSuppression(InputArray _gradm, InputArray _gradd, OutputArray _gr
 /*清除異方向點*/
 void ClearDifferentDirection(InputArray _gradm, InputArray _gradd, OutputArray _gradmCDD, OutputArray _graddCDD);
 
-/*幅值斷線連通*/
-void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCBL, OutputArray _graddCBL, int startSpace = 2, int endSpace = 5, int degree = 60, bool flag = 0);
+/*梯度場斷線連通*/
+// startSpace -> 起始搜尋的間距
+// endSpace   -> 結束搜尋的間距
+// degree     -> 容忍誤差角度
+// flagT = 0  -> 只搜尋端點
+// flagT = 1  -> 可搜尋端點、線段點、分岔點
+// flagD = 0  -> 只搜尋90度方向
+// flagD = 1  -> 可搜尋180度方向
+void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCBL, OutputArray _graddCBL, int startSpace = 2, int endSpace = 5, int degree = 60, int flagT = 0, bool flagD = 0);
 
 /*滯後閥值*/
 void HysteresisThreshold(InputArray _NMSgradientField_abs, OutputArray _HTedge, int upperThreshold, int lowerThreshold);
 
 /*二值斷線連通*/
-void BWConnectBreakLine(InputArray _gradmWCBL, InputArray _graddWCBL, InputArray _edgeHT, OutputArray _edgeFCBL, int startSpace = 2, int endSpace = 100, int degree = 150, bool flag = 0);
+void BWConnectBreakLine(InputArray _gradmWCBL, InputArray _graddWCBL, InputArray _edgeHT, OutputArray _edgeFCBL, int startSpace = 2, int endSpace = 5, int degree = 60, int flagT = 0, bool flagD = 0);
