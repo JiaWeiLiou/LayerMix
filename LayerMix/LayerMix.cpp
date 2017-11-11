@@ -217,7 +217,7 @@ int main()
 	/*短對稱端點連通*/
 
 	Mat gradmSSCBL, graddSSCBL, lineSSCBL;			//短對稱端點連通(8UC1、32FC1、8UC1(BW))
-	BWConnectBreakLine(gradmCBL, graddCBL, lineCIP, gradmSSCBL, graddSSCBL, lineSSCBL, 2, 7, 90, 0, 0);
+	BWConnectBreakLine(gradmCBL, graddCBL, lineCIP, gradmSSCBL, graddSSCBL, lineSSCBL, 2, 10, 90, 0, 0);
 
 	Mat gradmSSCBL_out, graddSSCBL_out, gradfSSCBL_out;		//輸出用(8UC1、8UC3、8UC3)
 	DrawAbsGraySystem(gradmSSCBL, gradmSSCBL_out);
@@ -236,7 +236,7 @@ int main()
 	/*短斷線強制連通*/
 
 	Mat gradmSACBL, graddSACBL, lineSACBL;			//短斷線強制連通(8UC1、32FC1、8UC1(BW))
-	BWConnectBreakLine(gradmSSCBL, graddSSCBL, lineSSCBL, gradmSACBL, graddSACBL, lineSACBL, 2, 7, 180, 1, 1);
+	BWConnectBreakLine(gradmSSCBL, graddSSCBL, lineSSCBL, gradmSACBL, graddSACBL, lineSACBL, 2, 5, 180, 1, 1);
 
 	Mat gradmSACBL_out, graddSACBL_out, gradfSACBL_out;		//輸出用(8UC1、8UC3、8UC3)
 	DrawAbsGraySystem(gradmSACBL, gradmSACBL_out);
@@ -252,12 +252,50 @@ int main()
 	string gradfSACBL_outfile = filepath + "\\" + infilename + "_12.2.3_SACBLF.png";			//短斷線強制連通(場)
 	imwrite(gradfSACBL_outfile, gradfSACBL_out);
 
+	/*去除雜訊端點*/
+
+	Mat lineCNP;	//去除孤立點(8UC1(BW))
+	ClearSpecialPoint(lineSACBL, lineCNP, blurLineSize, 3, 1);
+	string LCNP_outfile = filepath + "\\" + infilename + "_13_CIP.png";			//去除孤立點
+	imwrite(LCNP_outfile, lineCNP);
+
 	/*長對稱端點連通*/
 
+	Mat gradmLSCBL, graddLSCBL, lineLSCBL;			//長對稱端點連通(8UC1、32FC1、8UC1(BW))
+	BWConnectBreakLine(gradmSACBL, graddSACBL, lineCNP, gradmLSCBL, graddLSCBL, lineLSCBL, 2, 100, 90, 0, 0);
 
-	/*長斷線連通*/
+	Mat gradmLSCBL_out, graddLSCBL_out, gradfLSCBL_out;		//輸出用(8UC1、8UC3、8UC3)
+	DrawAbsGraySystem(gradmLSCBL, gradmLSCBL_out);
+	DrawColorSystem(graddLSCBL, graddLSCBL_out);
+	DrawColorSystem(gradmLSCBL, graddLSCBL, gradfLSCBL_out);
+
+	string LLSCBL_outfile = filepath + "\\" + infilename + "_14.1.0_LSCBL.png";					//長對稱端點連通(二值)
+	imwrite(LLSCBL_outfile, lineLSCBL);
+	string gradmLSCBL_outfile = filepath + "\\" + infilename + "_14.1.1_LSCBLM.png";			//長對稱端點連通(幅值)
+	imwrite(gradmLSCBL_outfile, gradmLSCBL_out);
+	string graddLSCBL_outfile = filepath + "\\" + infilename + "_14.1.2_LSCBLD.png";			//長對稱端點連通(方向)
+	imwrite(graddLSCBL_outfile, graddLSCBL_out);
+	string gradfLSCBL_outfile = filepath + "\\" + infilename + "_14.1.3_LSCBLF.png";			//長對稱端點連通(場)
+	imwrite(gradfLSCBL_outfile, gradfLSCBL_out);
+
+	/*長斷線強制連通*/
 	
+	Mat gradmLACBL, graddLACBL, lineLACBL;			//長斷線強制連通(8UC1、32FC1、8UC1(BW))
+	BWConnectBreakLine(gradmLSCBL, graddLSCBL, lineLSCBL, gradmLACBL, graddLACBL, lineLACBL, 2, 20, 90, 1, 0);
 
+	Mat gradmLACBL_out, graddLACBL_out, gradfLACBL_out;		//輸出用(8UC1、8UC3、8UC3)
+	DrawAbsGraySystem(gradmLACBL, gradmLACBL_out);
+	DrawColorSystem(graddLACBL, graddLACBL_out);
+	DrawColorSystem(gradmLACBL, graddLACBL, gradfLACBL_out);
+
+	string LLACBL_outfile = filepath + "\\" + infilename + "_14.2.0_LACBL.png";					//長斷線強制連通(二值)
+	imwrite(LLACBL_outfile, lineLACBL);
+	string gradmLACBL_outfile = filepath + "\\" + infilename + "_14.2.1_LACBLM.png";			//長斷線強制連通(幅值)
+	imwrite(gradmLACBL_outfile, gradmLACBL_out);
+	string graddLACBL_outfile = filepath + "\\" + infilename + "_14.2.2_LACBLD.png";			//長斷線強制連通(方向)
+	imwrite(graddLACBL_outfile, graddLACBL_out);
+	string gradfLACBL_outfile = filepath + "\\" + infilename + "_14.2.3_LACBLF.png";			//長斷線強制連通(場)
+	imwrite(gradfLACBL_outfile, gradfLACBL_out);
 
 	/*去除突出雜線及孤立線*/
 

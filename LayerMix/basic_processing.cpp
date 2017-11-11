@@ -926,7 +926,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 	_graddCBL.create(gradd.size(), CV_32FC1);
 	Mat graddCBL = _graddCBL.getMat();
 
-	if (flagT != 0 || flagT != 1) { flagT = 0; }
+	if (flagT != 0 && flagT != 1) { flagT = 0; }
 
 	gradm.copyTo(gradmCBL);
 	gradd.copyTo(graddCBL);
@@ -1702,7 +1702,7 @@ void BWConnectBreakLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine
 	_bwLineCBL.create(bwLine.size(), CV_8UC1);
 	Mat bwLineCBL = _bwLineCBL.getMat();
 
-	if (flagT != 0 || flagT != 1) { flagT = 0; }
+	if (flagT != 0 && flagT != 1) { flagT = 0; }
 
 	Mat gradmRef(gradm.size(), CV_8UC1);
 	Mat graddRef(gradd.size(), CV_32FC1);
