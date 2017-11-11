@@ -208,9 +208,9 @@ void pointlabel(InputArray _gradm, OutputArray _labels)
 							labels.at<Vec2b>(i, j)[1] = 0;
 						}
 				}
-				else		//Bifurcation point
+				else		//Line Point
 				{
-					labels.at<Vec2b>(i, j)[0] = 4;
+					labels.at<Vec2b>(i, j)[0] = 3;
 					labels.at<Vec2b>(i, j)[1] = 0;
 				}
 			}
@@ -1103,11 +1103,6 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 
 					bool flag1 = 1, flag2 = 1, flag3 = 1;	//相鄰flagT
 
-					if (i == 358 && j == 566 && x == 4)
-					{
-						cout << "stop" << endl;
-					}
-
 					/*搜尋最佳點(八區域搜尋)*/
 					if (endPointMap.at<Vec2b>(i, j)[1] == 1)		//8區域搜尋 - 1區(W區)
 					{
@@ -1460,22 +1455,20 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 						else if (x - k < 0) { sign = -1; }
 
 						//直線區
-						for (int ic = i, jc = j; jc >= j - (x - abs(k - x)); --jc)
+						for (int ic = i, jc = j; jc >= j - (x - abs(k - x)); --jc, ++step)
 						{
 							endPointMap.at<Vec2b>(ic, jc)[0] = 3;
 							endPointMap.at<Vec2b>(ic, jc)[1] = 0;
 							gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
 							graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(connectgradd)*step, cos(gradd.at<float>(i, j))*(x - step) + cos(connectgradd)*step);
-							++step;
 						}
 						//斜線區
-						for (int ic = i + sign, jc = j - (x - abs(k - x)) - 1; jc >= j - x; ic = ic + sign, --jc)
+						for (int ic = i + sign, jc = j - (x - abs(k - x)) - 1; jc >= j - x; ic = ic + sign, --jc, ++step)
 						{
 							endPointMap.at<Vec2b>(ic, jc)[0] = 3;
 							endPointMap.at<Vec2b>(ic, jc)[1] = 0;
 							gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
 							graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(connectgradd)*step, cos(gradd.at<float>(i, j))*(x - step) + cos(connectgradd)*step);
-							++step;
 						}
 					}
 					else if (searchLocation == 2 && mintheta <= degree)		//4區域連通 - 2區(NW區)
@@ -1489,22 +1482,20 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 						else if (x - k < 0) { sign = -1; }
 
 						//直線區
-						for (int ic = i, jc = j; ic >= i - (x - abs(k - x)); --ic)
+						for (int ic = i, jc = j; ic >= i - (x - abs(k - x)); --ic, ++step)
 						{
 							endPointMap.at<Vec2b>(ic, jc)[0] = 3;
 							endPointMap.at<Vec2b>(ic, jc)[1] = 0;
 							gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
 							graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(connectgradd)*step, cos(gradd.at<float>(i, j))*(x - step) + cos(connectgradd)*step);
-							++step;
 						}
 						//斜線區
-						for (int ic = i - (x - abs(k - x)) - 1, jc = j - sign; ic >= i - x; --ic, jc = jc - sign)
+						for (int ic = i - (x - abs(k - x)) - 1, jc = j - sign; ic >= i - x; --ic, jc = jc - sign, ++step)
 						{
 							endPointMap.at<Vec2b>(ic, jc)[0] = 3;
 							endPointMap.at<Vec2b>(ic, jc)[1] = 0;
 							gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
 							graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(connectgradd)*step, cos(gradd.at<float>(i, j))*(x - step) + cos(connectgradd)*step);
-							++step;
 						}
 					}
 					else if (searchLocation == 3 && mintheta <= degree)		//4區域連通 - 3區(NE區)
@@ -1517,22 +1508,20 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 						else if (x - k < 0) { sign = -1; }
 
 						//直線區
-						for (int ic = i, jc = j; jc <= j + (x - abs(k - x)); ++jc)
+						for (int ic = i, jc = j; jc <= j + (x - abs(k - x)); ++jc, ++step)
 						{
 							endPointMap.at<Vec2b>(ic, jc)[0] = 3;
 							endPointMap.at<Vec2b>(ic, jc)[1] = 0;
 							gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
 							graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(connectgradd)*step, cos(gradd.at<float>(i, j))*(x - step) + cos(connectgradd)*step);
-							++step;
 						}
 						//斜線區
-						for (int ic = i - sign, jc = j + (x - abs(k - x)) + 1; jc <= j + x; ic = ic - sign, ++jc)
+						for (int ic = i - sign, jc = j + (x - abs(k - x)) + 1; jc <= j + x; ic = ic - sign, ++jc, ++step)
 						{
 							endPointMap.at<Vec2b>(ic, jc)[0] = 3;
 							endPointMap.at<Vec2b>(ic, jc)[1] = 0;
 							gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
 							graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(connectgradd)*step, cos(gradd.at<float>(i, j))*(x - step) + cos(connectgradd)*step);
-							++step;
 						}
 					}
 					else if (searchLocation == 4 && mintheta <= degree)		//4區域連通 - 4區(SE區)
@@ -1545,22 +1534,20 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 						else if (x - k < 0) { sign = -1; }
 
 						//直線區
-						for (int ic = i, jc = j; ic <= i + (x - abs(k - x)); ++ic)
+						for (int ic = i, jc = j; ic <= i + (x - abs(k - x)); ++ic, ++step)
 						{
 							endPointMap.at<Vec2b>(ic, jc)[0] = 3;
 							endPointMap.at<Vec2b>(ic, jc)[1] = 0;
 							gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
 							graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(connectgradd)*step, cos(gradd.at<float>(i, j))*(x - step) + cos(connectgradd)*step);
-							++step;
 						}
 						//斜線區
-						for (int ic = i + (x - abs(k - x)) + 1, jc = j + sign; ic <= i + x; ++ic, jc = jc + sign)
+						for (int ic = i + (x - abs(k - x)) + 1, jc = j + sign; ic <= i + x; ++ic, jc = jc + sign, ++step)
 						{
 							endPointMap.at<Vec2b>(ic, jc)[0] = 3;
 							endPointMap.at<Vec2b>(ic, jc)[1] = 0;
 							gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + connectgradm*step / x;
 							graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(connectgradd)*step, cos(gradd.at<float>(i, j))*(x - step) + cos(connectgradd)*step);
-							++step;
 						}
 					}
 				}

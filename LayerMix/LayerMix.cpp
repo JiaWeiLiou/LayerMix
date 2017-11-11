@@ -189,36 +189,50 @@ int main()
 	string gradFCDDOutfile = filepath + "\\" + infilename + "_8.3_CDDF.png";			//清除異方向點(場)
 	imwrite(gradFCDDOutfile, gradfCDD_out);
 
-	/*初步斷線連通*/
+	/*斷線連通*/
 
-	Mat gradmWCBL, graddWCBL;			//斷線連通(8UC1、32FC1)
-	ConnectBreakLine(gradmCDD, graddCDD, gradmWCBL, graddWCBL, 2, 10, 60, 0, 0);
+	Mat gradmCBL, graddCBL;			//斷線連通(8UC1、32FC1)
+	ConnectBreakLine(gradmCDD, graddCDD, gradmCBL, graddCBL, 2, 3, 60, 0, 0);
 
-	Mat gradmWCBL_out, graddWCBL_out, gradfWCBL_out;		//輸出用(8UC1 or 8UC3)
-	DrawAbsGraySystem(gradmWCBL, gradmWCBL_out);
-	DrawColorSystem(graddWCBL, graddWCBL_out);
-	DrawColorSystem(gradmWCBL, graddWCBL, gradfWCBL_out);
+	Mat gradmCBL_out, graddCBL_out, gradfCBL_out;		//輸出用(8UC1 or 8UC3)
+	DrawAbsGraySystem(gradmCBL, gradmCBL_out);
+	DrawColorSystem(graddCBL, graddCBL_out);
+	DrawColorSystem(gradmCBL, graddCBL, gradfCBL_out);
 
-	string gradmWCBLOutfile = filepath + "\\" + infilename + "_9.1_WCBLM.png";			//初步斷線連通(幅值)
-	imwrite(gradmWCBLOutfile, gradmWCBL_out);
-	string graddWCBLOutfile = filepath + "\\" + infilename + "_9.2_WCBLD.png";			//初步斷線連通(方向)
-	imwrite(graddWCBLOutfile, graddWCBL_out);
-	string gradWFCBLOutfile = filepath + "\\" + infilename + "_9.3_WCBLF.png";			//初步斷線連通(場)
-	imwrite(gradWFCBLOutfile, gradfWCBL_out);
+	string gradmCBLOutfile = filepath + "\\" + infilename + "_9.1_CBLM.png";			//斷線連通(幅值)
+	imwrite(gradmCBLOutfile, gradmCBL_out);
+	string graddCBLOutfile = filepath + "\\" + infilename + "_9.2_CBLD.png";			//斷線連通(方向)
+	imwrite(graddCBLOutfile, graddCBL_out);
+	string gradFCBLOutfile = filepath + "\\" + infilename + "_9.3_CBLF.png";			//斷線連通(場)
+	imwrite(gradFCBLOutfile, gradfCBL_out);
 
 	/*滯後閥值*/
 
 	Mat edgeHT;		//滯後閥值(8UC1 and 二值影像)
-	HysteresisThreshold(gradmWCBL, edgeHT, 150, 50);
+	HysteresisThreshold(gradmCBL, edgeHT, 150, 50);
 	string edgehtOutfile = filepath + "\\" + infilename + "_10_HT.png";			//滯後閥值
 	imwrite(edgehtOutfile, edgeHT);
 
-	/*強制斷線連通*/
+	/*去除雜點*/
+
+	/*短對稱端點連通*/
 
 	Mat edgeFCBL;		//強制斷線連通(8UC1)
-	BWConnectBreakLine(gradmWCBL, graddWCBL, edgeHT, edgeFCBL, 2, 20, 90, 0, 0);
+	BWConnectBreakLine(gradmCBL, graddCBL, edgeHT, edgeFCBL, 2, 50, 100, 0, 0);
 	string edgefcblOutfile = filepath + "\\" + infilename + "_11_FCBL.png";			//強制斷線連通
 	imwrite(edgefcblOutfile, edgeFCBL);
+
+	/*短斷線連通*/
+
+	/*長對稱端點連通*/
+
+	/*長斷線連通*/
+
+	/*去除孤立線*/
+
+	/*去除突出雜線*/
+
+	/*分水嶺演算法切割*/
 
     return 0;
 }
