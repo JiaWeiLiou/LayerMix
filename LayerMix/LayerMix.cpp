@@ -208,19 +208,24 @@ int main()
 
 	/*滯後閥值*/
 
-	Mat edgeHT;		//滯後閥值(8UC1 and 二值影像)
-	HysteresisThreshold(gradmCBL, edgeHT, 150, 50);
-	string edgehtOutfile = filepath + "\\" + infilename + "_10_HT.png";			//滯後閥值
-	imwrite(edgehtOutfile, edgeHT);
+	Mat lineHT;		//滯後閥值(8UC1 and 二值影像)
+	HysteresisThreshold(gradmCBL, lineHT, 150, 50);
+	string linehtOutfile = filepath + "\\" + infilename + "_10_HT.png";			//滯後閥值
+	imwrite(linehtOutfile, lineHT);
 
-	/*去除雜點*/
+	/*去除孤立點*/
+
+	Mat lineCIP;	//去除孤立點(8UC1 and 二值影像)
+	ClearSpecialPoint(lineHT, lineCIP, 1, 0);
+	string linecipOutfile = filepath + "\\" + infilename + "_11_CIP.png";			//去除孤立點
+	imwrite(linecipOutfile, lineCIP);
 
 	/*短對稱端點連通*/
 
-	Mat edgeFCBL;		//強制斷線連通(8UC1)
-	BWConnectBreakLine(gradmCBL, graddCBL, edgeHT, edgeFCBL, 2, 50, 100, 0, 0);
-	string edgefcblOutfile = filepath + "\\" + infilename + "_11_FCBL.png";			//強制斷線連通
-	imwrite(edgefcblOutfile, edgeFCBL);
+	Mat lineSSCBL;		//短對稱端點連通(8UC1 and 二值影像)
+	BWConnectBreakLine(gradmCBL, graddCBL, lineCIP, lineSSCBL, 2, 5, 100, 0, 0);
+	string linesscblOutfile = filepath + "\\" + infilename + "_12_SSCBL.png";			//短對稱端點連通
+	imwrite(linesscblOutfile, lineSSCBL);
 
 	/*短斷線連通*/
 
