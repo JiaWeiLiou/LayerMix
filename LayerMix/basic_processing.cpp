@@ -1556,22 +1556,22 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 }
 
 /*滯後閥值*/
-void HysteresisThreshold(InputArray _NMSgradientField_abs, OutputArray _HTedge, int upperThreshold, int lowerThreshold)
+void HysteresisThreshold(InputArray _gradm, OutputArray _bwLine, int upperThreshold, int lowerThreshold)
 {
-	Mat NMSgradientField_abs = _NMSgradientField_abs.getMat();
-	CV_Assert(NMSgradientField_abs.type() == CV_8UC1);
+	Mat gradm = _gradm.getMat();
+	CV_Assert(gradm.type() == CV_8UC1);
 
-	_HTedge.create(NMSgradientField_abs.size(), CV_8UC1);
-	Mat HTedge = _HTedge.getMat();
+	_bwLine.create(gradm.size(), CV_8UC1);
+	Mat bwLine = _bwLine.getMat();
 
 	Mat UT;		//上閥值二值化
-	threshold(NMSgradientField_abs, UT, upperThreshold, 255, THRESH_BINARY);
+	threshold(gradm, UT, upperThreshold, 255, THRESH_BINARY);
 	Mat LT;		//下閥值二值化
-	threshold(NMSgradientField_abs, LT, lowerThreshold, 255, THRESH_BINARY);
+	threshold(gradm, LT, lowerThreshold, 255, THRESH_BINARY);
 	Mat MT;		//弱邊緣
-	MT.create(NMSgradientField_abs.size(), CV_8UC1);
-	for (int i = 0; i < NMSgradientField_abs.rows; ++i)
-		for (int j = 0; j < NMSgradientField_abs.cols; ++j)
+	MT.create(gradm.size(), CV_8UC1);
+	for (int i = 0; i < gradm.rows; ++i)
+		for (int j = 0; j < gradm.cols; ++j)
 		{
 			if (LT.at<uchar>(i, j) == 255 && UT.at<uchar>(i, j) == 0)
 				MT.at<uchar>(i, j) = 255;
@@ -1579,9 +1579,9 @@ void HysteresisThreshold(InputArray _NMSgradientField_abs, OutputArray _HTedge, 
 				MT.at<uchar>(i, j) = 0;
 
 			if (UT.at<uchar>(i, j) == 255)
-				HTedge.at<uchar>(i, j) = 255;
+				bwLine.at<uchar>(i, j) = 255;
 			else
-				HTedge.at<uchar>(i, j) = 0;
+				bwLine.at<uchar>(i, j) = 0;
 		}
 
 	Mat labelImg;
@@ -1590,8 +1590,8 @@ void HysteresisThreshold(InputArray _NMSgradientField_abs, OutputArray _HTedge, 
 	int* labeltable = new int[labelNum];		// initialize label table with zero  
 	memset(labeltable, 0, labelNum * sizeof(int));
 
-	for (int i = 0; i < NMSgradientField_abs.rows; ++i)
-		for (int j = 0; j < NMSgradientField_abs.cols; ++j)
+	for (int i = 0; i < gradm.rows; ++i)
+		for (int j = 0; j < gradm.cols; ++j)
 		{
 			//+ - + - + - +
 			//| B | C | D |
@@ -1609,22 +1609,22 @@ void HysteresisThreshold(InputArray _NMSgradientField_abs, OutputArray _HTedge, 
 			if (i == 0) { C = 0; }
 			else { C = UT.at<uchar>(i - 1, j); }
 
-			if (i == 0 || j == NMSgradientField_abs.cols - 1) { D = 0; }
+			if (i == 0 || j == gradm.cols - 1) { D = 0; }
 			else { D = UT.at<uchar>(i - 1, j + 1); }
 
 			if (j == 0) { E = 0; }
 			else { E = UT.at<uchar>(i, j - 1); }
 
-			if (j == NMSgradientField_abs.cols - 1) { F = 0; }
+			if (j == gradm.cols - 1) { F = 0; }
 			else { F = UT.at<uchar>(i, j + 1); }
 
-			if (i == NMSgradientField_abs.rows - 1 || j == 0) { G = 0; }
+			if (i == gradm.rows - 1 || j == 0) { G = 0; }
 			else { G = UT.at<uchar>(i + 1, j - 1); }
 
-			if (i == NMSgradientField_abs.rows - 1) { H = 0; }
+			if (i == gradm.rows - 1) { H = 0; }
 			else { H = UT.at<uchar>(i + 1, j); }
 
-			if (i == NMSgradientField_abs.rows - 1 || j == NMSgradientField_abs.cols - 1) { I = 0; }
+			if (i == gradm.rows - 1 || j == gradm.cols - 1) { I = 0; }
 			else { I = UT.at<uchar>(i + 1, j + 1); }
 
 			// apply 8 connectedness  
@@ -1641,55 +1641,88 @@ void HysteresisThreshold(InputArray _NMSgradientField_abs, OutputArray _HTedge, 
 		{
 			if (labeltable[labelImg.at<int>(i, j)] > 0)
 			{
-				HTedge.at<uchar>(i, j) = 255;
+				bwLine.at<uchar>(i, j) = 255;
 			}
 		}
 	delete[] labeltable;
 	labeltable = nullptr;
 }
 
-/*二值圖斷線連通*/
-void BWConnectBreakLine(InputArray _gradmWCBL, InputArray _graddWCBL, InputArray _edgeHT, OutputArray _edgeFCBL, int startSpace, int endSpace, int degree, int flagT, bool flagD)
+/*清除特定點*/
+void ClearSpecialPoint(InputArray _bwLine, OutputArray _bwLineCSP, int iter, bool flagT)
 {
-	Mat gradmWCBL = _gradmWCBL.getMat();
-	CV_Assert(gradmWCBL.type() == CV_8UC1);
+	Mat bwLine = _bwLine.getMat();
+	CV_Assert(bwLine.type() == CV_8UC1);
 
-	Mat graddWCBL = _graddWCBL.getMat();
-	CV_Assert(graddWCBL.type() == CV_32FC1);
+	_bwLineCSP.create(bwLine.size(), CV_8UC1);
+	Mat bwLineCSP = _bwLineCSP.getMat();
 
-	Mat edgeHT = _edgeHT.getMat();
-	CV_Assert(edgeHT.type() == CV_8UC1);
+	bwLine.copyTo(bwLineCSP);
 
-	_edgeFCBL.create(edgeHT.size(), CV_8UC1);
-	Mat edgeFCBL = _edgeFCBL.getMat();
+	int type;
+	if (!flagT) { type = 1; }		//Isolated Point
+	else { type = 2; }				//EndPoint 
+
+	bool stopflag = 1;
+
+	for (int step = 1; step <= iter && stopflag; ++step)
+	{
+		Mat pointMap;	//點的種類
+		pointlabel(bwLineCSP, pointMap);
+		int exenums = 0;
+		for (int i = 0; i < pointMap.rows; ++i)
+			for (int j = 0; j < pointMap.cols; ++j)
+				if (pointMap.at<Vec2b>(i, j)[0] == type)
+				{
+					bwLineCSP.at<uchar>(i, j) = 0;
+					++exenums;
+				}
+		if (exenums == 0) { stopflag = 0; }
+	}
+}
+
+/*二值圖斷線連通*/
+void BWConnectBreakLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine, OutputArray _bwLineCBL, int startSpace, int endSpace, int degree, int flagT, bool flagD)
+{
+	Mat gradm = _gradm.getMat();
+	CV_Assert(gradm.type() == CV_8UC1);
+
+	Mat gradd = _gradd.getMat();
+	CV_Assert(gradd.type() == CV_32FC1);
+
+	Mat bwLine = _bwLine.getMat();
+	CV_Assert(bwLine.type() == CV_8UC1);
+
+	_bwLineCBL.create(bwLine.size(), CV_8UC1);
+	Mat bwLineCBL = _bwLineCBL.getMat();
 
 	if (flagT != 0 || flagT != 1) { flagT = 0; }
 
-	Mat gradm(gradmWCBL.size(), CV_8UC1);
-	Mat gradd(graddWCBL.size(), CV_32FC1);
+	Mat gradmRef(gradm.size(), CV_8UC1);
+	Mat graddRef(gradd.size(), CV_32FC1);
 
-	for (int i = 0; i < edgeHT.rows; ++i)
-		for (int j = 0; j < edgeHT.cols; ++j)
+	for (int i = 0; i < bwLine.rows; ++i)
+		for (int j = 0; j < bwLine.cols; ++j)
 		{
-			if (edgeHT.at<uchar>(i, j) == 255)
+			if (bwLine.at<uchar>(i, j) == 255)
 			{
-				gradm.at<uchar>(i, j) = gradmWCBL.at<uchar>(i, j);
-				gradd.at<float>(i, j) = graddWCBL.at<float>(i, j);
+				gradmRef.at<uchar>(i, j) = gradm.at<uchar>(i, j);
+				graddRef.at<float>(i, j) = gradd.at<float>(i, j);
 			}
 			else
 			{
-				gradm.at<uchar>(i, j) = 0;
-				gradd.at<float>(i, j) = -1000.0f;
+				gradmRef.at<uchar>(i, j) = 0;
+				graddRef.at<float>(i, j) = -1000.0f;
 			}
 		}
 
 	Mat gradmCBL, graddCBL;
-	ConnectBreakLine(gradm, gradd, gradmCBL, graddCBL, startSpace, endSpace, degree, flagT, flagD);
+	ConnectBreakLine(gradmRef, graddRef, gradmCBL, graddCBL, startSpace, endSpace, degree, flagT, flagD);
 
 	for (int i = 0; i < graddCBL.rows; ++i)
 		for (int j = 0; j < graddCBL.cols; ++j)
 		{
-			if (graddCBL.at<float>(i, j) != -1000.0f) { edgeFCBL.at<uchar>(i, j) = 255; }
-			else { edgeFCBL.at<uchar>(i, j) = 0; }
+			if (graddCBL.at<float>(i, j) != -1000.0f) { bwLineCBL.at<uchar>(i, j) = 255; }
+			else { bwLineCBL.at<uchar>(i, j) = 0; }
 		}
 }

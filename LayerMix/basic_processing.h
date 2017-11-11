@@ -83,7 +83,13 @@ void ClearDifferentDirection(InputArray _gradm, InputArray _gradd, OutputArray _
 void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCBL, OutputArray _graddCBL, int startSpace = 2, int endSpace = 5, int degree = 60, int flagT = 0, bool flagD = 0);
 
 /*滯後閥值*/
-void HysteresisThreshold(InputArray _NMSgradientField_abs, OutputArray _HTedge, int upperThreshold, int lowerThreshold);
+void HysteresisThreshold(InputArray _gradm, OutputArray _bwLine, int upperThreshold, int lowerThreshold);
+
+/*清除特定點*/
+//  iter -- 重複刪除次數
+//  flagT = 0 -> 清除孤立點
+//  flagT = 1 -> 清除端點
+void ClearSpecialPoint(InputArray _bwLine, OutputArray _bwLineCSP, int iter, bool flagT);
 
 /*二值斷線連通*/
 void BWConnectBreakLine(InputArray _gradmWCBL, InputArray _graddWCBL, InputArray _edgeHT, OutputArray _edgeFCBL, int startSpace = 2, int endSpace = 5, int degree = 60, int flagT = 0, bool flagD = 0);
