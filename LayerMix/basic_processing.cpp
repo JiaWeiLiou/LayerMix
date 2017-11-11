@@ -1672,7 +1672,7 @@ void ClearSpecialPoint(InputArray _bwLine, OutputArray _bwLineCSP, int border, i
 		int exenums = 0;
 		for (int i = border; i < pointMap.rows - border; ++i)
 			for (int j = border; j < pointMap.cols - border; ++j)
-				if (pointMap.at<Vec2b>(i, j)[0] == type)
+				if (pointMap.at<Vec2b>(i, j)[0] == 1 || pointMap.at<Vec2b>(i, j)[0] == type)
 				{
 					bwLineCSP.at<uchar>(i, j) = 0;
 					++exenums;
