@@ -727,43 +727,43 @@ void Differential(InputArray _grayImage, OutputArray _gradx, OutputArray _grady)
 }
 
 /*結合水平及垂直方向梯度為梯度場*/
-void GradientField(InputArray _grad_x, InputArray _grad_y, OutputArray _gradientField) {
+void GradientField(InputArray _gradx, InputArray _grady, OutputArray _gradf) {
 
-	Mat grad_x = _grad_x.getMat();
-	CV_Assert(grad_x.type() == CV_16SC1);
+	Mat gradx = _gradx.getMat();
+	CV_Assert(gradx.type() == CV_16SC1);
 
-	Mat grad_y = _grad_y.getMat();
-	CV_Assert(grad_y.type() == CV_16SC1);
+	Mat grady = _grady.getMat();
+	CV_Assert(grady.type() == CV_16SC1);
 
-	_gradientField.create(grad_y.rows, grad_x.cols, CV_16SC2);
-	Mat gradientField = _gradientField.getMat();
+	_gradf.create(grady.rows, gradx.cols, CV_16SC2);
+	Mat gradf = _gradf.getMat();
 
-	for (int i = 0; i < grad_y.rows; ++i)
-		for (int j = 0; j < grad_x.cols; ++j)
+	for (int i = 0; i < grady.rows; ++i)
+		for (int j = 0; j < gradx.cols; ++j)
 		{
-			gradientField.at<Vec2s>(i, j)[0] = grad_x.at<short>(i, j);
-			gradientField.at<Vec2s>(i, j)[1] = grad_y.at<short>(i, j);
+			gradf.at<Vec2s>(i, j)[0] = gradx.at<short>(i, j);
+			gradf.at<Vec2s>(i, j)[1] = grady.at<short>(i, j);
 		}
 
 }
 
 /*計算梯度幅值及方向*/
-void CalculateGradient(InputArray _gradientField, OutputArray _gradm, OutputArray _gradd)
+void CalculateGradient(InputArray _gradf, OutputArray _gradm, OutputArray _gradd)
 {
-	Mat gradientField = _gradientField.getMat();
-	CV_Assert(gradientField.type() == CV_16SC2);
+	Mat gradf = _gradf.getMat();
+	CV_Assert(gradf.type() == CV_16SC2);
 
-	_gradm.create(gradientField.size(), CV_8UC1);
+	_gradm.create(gradf.size(), CV_8UC1);
 	Mat gradm = _gradm.getMat();
 
-	_gradd.create(gradientField.size(), CV_32FC1);
+	_gradd.create(gradf.size(), CV_32FC1);
 	Mat gradd = _gradd.getMat();
 
-	for (int i = 0; i < gradientField.rows; ++i)
-		for (int j = 0; j < gradientField.cols; ++j)
+	for (int i = 0; i < gradf.rows; ++i)
+		for (int j = 0; j < gradf.cols; ++j)
 		{
-			short x = gradientField.at<Vec2s>(i, j)[0];
-			short y = gradientField.at<Vec2s>(i, j)[1];
+			short x = gradf.at<Vec2s>(i, j)[0];
+			short y = gradf.at<Vec2s>(i, j)[1];
 			gradm.at<uchar>(i, j) = sqrt(x*x + y*y);
 
 			if (x == 0 && y == 0) { gradd.at<float>(i, j) = -1000.0f; }	//用以顯示無梯度方向
@@ -927,7 +927,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 	Mat graddCBL = _graddCBL.getMat();
 
 	if (flagT != 0 || flagT != 1) { flagT = 0; }
-		
+
 	gradm.copyTo(gradmCBL);
 	gradd.copyTo(graddCBL);
 
@@ -1068,7 +1068,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					if (!flag1) { nearPoint1.at<uchar>(i, j) = 0; }
 					if (!flag2) { nearPoint2.at<uchar>(i, j) = 0; }
 					if (!flag3) { nearPoint3.at<uchar>(i, j) = 0; }
-					if (nearPoint1.at<uchar>(i, j)==0 && nearPoint2.at<uchar>(i, j)==0 && nearPoint3.at<uchar>(i, j)==0)
+					if (nearPoint1.at<uchar>(i, j) == 0 && nearPoint2.at<uchar>(i, j) == 0 && nearPoint3.at<uchar>(i, j) == 0)
 						endPointMap.at<Vec2b>(i, j)[0] = 5;		//淘汰端點
 				}
 			}
@@ -1107,7 +1107,7 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 					if (endPointMap.at<Vec2b>(i, j)[1] == 1)		//8區域搜尋 - 1區(W區)
 					{
 						//區塊1(N->NE)
-						for (int is = ir - x, js = jr + 1, nowLocation = x + 1; js <= jr + x && nearPoint1.at<uchar>(i, j)==1 && flagD; ++js, ++nowLocation)
+						for (int is = ir - x, js = jr + 1, nowLocation = x + 1; js <= jr + x && nearPoint1.at<uchar>(i, j) == 1 && flagD; ++js, ++nowLocation)
 							if (graddRef.at<float>(is, js) != -1000.0f)
 							{
 								flag1 = 0;
@@ -1436,12 +1436,12 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 								}
 							}
 					}
-					
+
 					/*修改端點類型*/
 					if (!flag1) { nearPoint1.at<uchar>(i, j) = 0; }
 					if (!flag2) { nearPoint2.at<uchar>(i, j) = 0; }
 					if (!flag3) { nearPoint3.at<uchar>(i, j) = 0; }
-					if (nearPoint1.at<uchar>(i, j)==0 && nearPoint2.at<uchar>(i, j)==0 && nearPoint3.at<uchar>(i, j)==0)
+					if (nearPoint1.at<uchar>(i, j) == 0 && nearPoint2.at<uchar>(i, j) == 0 && nearPoint3.at<uchar>(i, j) == 0)
 						endPointMap.at<Vec2b>(i, j)[0] = 5;		//淘汰端點
 
 					/*連通最佳點(四區域連通)*/
@@ -1649,7 +1649,7 @@ void HysteresisThreshold(InputArray _gradm, OutputArray _bwLine, int upperThresh
 }
 
 /*清除特定點*/
-void ClearSpecialPoint(InputArray _bwLine, OutputArray _bwLineCSP, int iter, bool flagT)
+void ClearSpecialPoint(InputArray _bwLine, OutputArray _bwLineCSP, int border, int iter, bool flagT)
 {
 	Mat bwLine = _bwLine.getMat();
 	CV_Assert(bwLine.type() == CV_8UC1);
@@ -1670,8 +1670,8 @@ void ClearSpecialPoint(InputArray _bwLine, OutputArray _bwLineCSP, int iter, boo
 		Mat pointMap;	//點的種類
 		pointlabel(bwLineCSP, pointMap);
 		int exenums = 0;
-		for (int i = 0; i < pointMap.rows; ++i)
-			for (int j = 0; j < pointMap.cols; ++j)
+		for (int i = border; i < pointMap.rows - border; ++i)
+			for (int j = border; j < pointMap.cols - border; ++j)
 				if (pointMap.at<Vec2b>(i, j)[0] == type)
 				{
 					bwLineCSP.at<uchar>(i, j) = 0;
@@ -1682,7 +1682,7 @@ void ClearSpecialPoint(InputArray _bwLine, OutputArray _bwLineCSP, int iter, boo
 }
 
 /*二值圖斷線連通*/
-void BWConnectBreakLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine, OutputArray _bwLineCBL, int startSpace, int endSpace, int degree, int flagT, bool flagD)
+void BWConnectBreakLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine, OutputArray _gradmCBL, OutputArray _graddCBL, OutputArray _bwLineCBL, int startSpace, int endSpace, int degree, int flagT, bool flagD)
 {
 	Mat gradm = _gradm.getMat();
 	CV_Assert(gradm.type() == CV_8UC1);
@@ -1692,6 +1692,12 @@ void BWConnectBreakLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine
 
 	Mat bwLine = _bwLine.getMat();
 	CV_Assert(bwLine.type() == CV_8UC1);
+
+	_gradmCBL.create(gradm.size(), CV_8UC1);
+	Mat gradmCBL = _gradmCBL.getMat();
+
+	_graddCBL.create(gradd.size(), CV_32FC1);
+	Mat graddCBL = _graddCBL.getMat();
 
 	_bwLineCBL.create(bwLine.size(), CV_8UC1);
 	Mat bwLineCBL = _bwLineCBL.getMat();
@@ -1716,7 +1722,6 @@ void BWConnectBreakLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine
 			}
 		}
 
-	Mat gradmCBL, graddCBL;
 	ConnectBreakLine(gradmRef, graddRef, gradmCBL, graddCBL, startSpace, endSpace, degree, flagT, flagD);
 
 	for (int i = 0; i < graddCBL.rows; ++i)
