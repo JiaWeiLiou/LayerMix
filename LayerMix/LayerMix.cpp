@@ -138,7 +138,7 @@ int main()
 	/*分割混合模式*/
 
 	Mat divideLine;										//分割混合模式(8UC1)
-	Divide(gradm, blurLImage, divideLine);
+	Divide(gradm, grayImage, divideLine);
 
 	Mat gradmDivide_out, gradfDivide_out;				//輸出用(8UC1、8UC3)
 	DrawAbsGraySystem(divideLine, gradmDivide_out);
@@ -203,7 +203,7 @@ int main()
 	/*滯後閥值*/
 
 	Mat lineHT;		//滯後閥值(8UC1(BW))
-	HysteresisThreshold(gradmCBL, lineHT, 150, 50);
+	HysteresisThreshold(gradmCBL, lineHT, 100, 10);
 	string LHT_outfile = filepath + "\\" + infilename + "_10_HT.png";			//滯後閥值
 	imwrite(LHT_outfile, lineHT);
 
