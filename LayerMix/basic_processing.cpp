@@ -514,8 +514,8 @@ void LayerMix(InputArray _grayImage, InputArray _blurImage, OutputArray _mixImag
 		}
 }
 
-/*分割混合模式*/
-void Divide(InputArray _grayImage, InputArray _mixImage, OutputArray _divideImage)
+/*面分割混合模式*/
+void DivideA(InputArray _grayImage, InputArray _mixImage, OutputArray _divideImage)
 {
 	Mat grayImage = _grayImage.getMat();
 	CV_Assert(grayImage.type() == CV_8UC1);
@@ -769,6 +769,23 @@ void CalculateGradient(InputArray _gradf, OutputArray _gradm, OutputArray _gradd
 			if (x == 0 && y == 0) { gradd.at<float>(i, j) = -1000.0f; }	//用以顯示無梯度方向
 			else { gradd.at<float>(i, j) = atan2(y, x); }
 		}
+}
+
+/*線分割混合模式*/
+void DivideL(InputArray _grayImage, InputArray _mixImage, OutputArray _divideImage)
+{
+	Mat grayImage = _grayImage.getMat();
+	CV_Assert(grayImage.type() == CV_8UC1);
+
+	Mat mixImage = _mixImage.getMat();
+	CV_Assert(mixImage.type() == CV_8UC1);
+
+	_divideImage.create(grayImage.size(), CV_8UC1);
+	Mat divideImage = _divideImage.getMat();
+
+	for (int i = 0; i < grayImage.rows; ++i)
+		for (int j = 0; j < grayImage.cols; ++j)
+			divideImage.at<uchar>(i, j) = (double)grayImage.at<uchar>(i, j) / (double)mixImage.at<uchar>(i, j) >= 1 ? 0 : (1-(double)grayImage.at<uchar>(i, j) / (double)mixImage.at<uchar>(i, j)) * 255;
 }
 
 /*非極大值抑制*/
