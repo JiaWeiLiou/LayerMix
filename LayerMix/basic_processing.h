@@ -49,7 +49,7 @@ void DrawAbsGraySystem(InputArray _field, OutputArray _grayField);
 void LayerMix(InputArray _grayImage, InputArray _blurImage, OutputArray _mixImage);
 
 /*基於面的分割混合模式*/
-void DivideA(InputArray _grayImage, InputArray _mixImage, OutputArray _divideImage);
+void DivideArea(InputArray _grayImage, InputArray _mixImage, OutputArray _divideImage);
 
 /*實色印疊合混合模式*/
 void HardMix(InputArray _grayImage, InputArray _mixImage, OutputArray _hardmixImage);
@@ -66,8 +66,11 @@ void GradientField(InputArray _grad_x, InputArray _grad_y, OutputArray _gradient
 /*計算梯度幅值及方向*/
 void CalculateGradient(InputArray _gradientField, OutputArray _gradm, OutputArray _gradd);
 
-/*基於面的分割混合模式*/
-void DivideL(InputArray _grayImage, InputArray _mixImage, OutputArray _divideImage);
+/*基於線的分割混合模式*/
+void DivideLine(InputArray _gradm, InputArray _gradmblur, OutputArray _gradmDivide);
+
+/*梯度方向模糊*/
+void BlurDirection(InputArray _gradd, OutputArray _graddblur, int blurLineSize);
 
 /*非極大值抑制*/
 void NonMaximumSuppression(InputArray _gradm, InputArray _gradd, OutputArray _gradmNMS, OutputArray _graddNMS);

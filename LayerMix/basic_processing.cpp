@@ -1,6 +1,32 @@
 #include "stdafx.h"
 #include "basic_processing.h"
 
+/*生成二維高斯核*/
+
+Mat gaussian_kernal(int size, int sigma)
+{
+	if (size % 2 == 0) { --size; }
+	int x = (size - 1) / 2;
+	Mat kernal(size, size, CV_32FC1);
+
+	if (sigma = -1) { sigma = 0.3*((size - 1)*0.5 - 1) + 0.8; }
+
+	float s2 = 2.0 * sigma * sigma;
+	for (int i = -x; i <= x; i++)
+	{
+		int m = i + x;
+		for (int j = -x; j <= x; j++)
+		{
+			int n = j + x;
+			float v = exp(-(1.0*i*i + 1.0*j*j) / s2);
+			kernal.ptr<float>(m)[n] = v;
+		}
+	}
+	Scalar all = sum(kernal);
+	Mat gaussK;
+	kernal.convertTo(gaussK, CV_32FC1, (1 / all[0]));
+	return gaussK;
+}
 
 /*尋找根結點*/
 int findroot(int labeltable[], int label)
@@ -514,8 +540,8 @@ void LayerMix(InputArray _grayImage, InputArray _blurImage, OutputArray _mixImag
 		}
 }
 
-/*面分割混合模式*/
-void DivideA(InputArray _grayImage, InputArray _mixImage, OutputArray _divideImage)
+/*基於面的分割混合模式*/
+void DivideArea(InputArray _grayImage, InputArray _mixImage, OutputArray _divideImage)
 {
 	Mat grayImage = _grayImage.getMat();
 	CV_Assert(grayImage.type() == CV_8UC1);
@@ -771,21 +797,60 @@ void CalculateGradient(InputArray _gradf, OutputArray _gradm, OutputArray _gradd
 		}
 }
 
-/*線分割混合模式*/
-void DivideL(InputArray _grayImage, InputArray _mixImage, OutputArray _divideImage)
+/*基於線的分割混合模式*/
+void DivideLine(InputArray _gradm, InputArray _gradmblur, OutputArray _gradmDivide)
 {
-	Mat grayImage = _grayImage.getMat();
-	CV_Assert(grayImage.type() == CV_8UC1);
+	Mat gradm = _gradm.getMat();
+	CV_Assert(gradm.type() == CV_8UC1);
 
-	Mat mixImage = _mixImage.getMat();
-	CV_Assert(mixImage.type() == CV_8UC1);
+	Mat gradmblur = _gradmblur.getMat();
+	CV_Assert(gradmblur.type() == CV_8UC1);
 
-	_divideImage.create(grayImage.size(), CV_8UC1);
-	Mat divideImage = _divideImage.getMat();
+	_gradmDivide.create(gradm.size(), CV_8UC1);
+	Mat gradmDivide = _gradmDivide.getMat();
 
-	for (int i = 0; i < grayImage.rows; ++i)
-		for (int j = 0; j < grayImage.cols; ++j)
-			divideImage.at<uchar>(i, j) = (double)grayImage.at<uchar>(i, j) / (double)mixImage.at<uchar>(i, j) >= 1 ? 0 : (1-(double)grayImage.at<uchar>(i, j) / (double)mixImage.at<uchar>(i, j)) * 255;
+	for (int i = 0; i < gradm.rows; ++i)
+		for (int j = 0; j < gradm.cols; ++j)
+			gradmDivide.at<uchar>(i, j) = ((double)gradmblur.at<uchar>(i, j) / (double)gradm.at<uchar>(i, j) >= 1 || gradm.at<uchar>(i, j) == 0 || gradmblur.at<uchar>(i, j) == 0) ? 0 : (1 - (double)gradmblur.at<uchar>(i, j) / (double)gradm.at<uchar>(i, j)) * 255;
+}
+
+/*梯度方向模糊*/
+void BlurDirection(InputArray _gradd, OutputArray _graddblur, int blurLineSize)
+{
+	Mat gradd = _gradd.getMat();
+	CV_Assert(gradd.type() == CV_32FC1);
+
+	_graddblur.create(gradd.size(), CV_32FC1);
+	Mat graddblur = _graddblur.getMat();
+
+	if (blurLineSize % 2 == 0) { --blurLineSize; }
+
+	int x = (blurLineSize - 1) / 2;
+
+	Mat gaussianKernel = gaussian_kernal(blurLineSize, -1);
+
+	Mat graddRef;
+	copyMakeBorder(gradd, graddRef, x, x, x, x, BORDER_CONSTANT, Scalar(-1000.0f));
+
+	for (int i = 0; i < gradd.rows; ++i)
+		for (int j = 0; j < gradd.cols; ++j)
+			if (gradd.at<float>(i, j) != -1000.0f)
+			{
+				float sinsum = 0.0f;
+				float cossum = 0.0f;
+				int num = 0;
+
+				for (int ic = i, ig = 0; ic <= i + 2 * x; ++ic, ++ig)
+					for (int jc = j, jg = 0; jc <= j + 2 * x; ++jc, ++jg)
+						if (graddRef.at<float>(ic, jc) != -1000.0f)
+						{
+							sinsum += sin(graddRef.at<float>(ic, jc))*gaussianKernel.at<float>(ig, jg);
+							cossum += cos(graddRef.at<float>(ic, jc))*gaussianKernel.at<float>(ig, jg);
+							++num;
+						}
+				graddblur.at<float>(i, j) = atan2(sinsum, cossum);
+			}
+			else { graddblur.at<float>(i, j) = -1000.0f; }
 }
 
 /*非極大值抑制*/
