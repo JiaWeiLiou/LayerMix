@@ -130,7 +130,7 @@ int main()
 	/*方向模糊*/
 
 	Mat graddBlur;	//模糊方向(8UC1)	
-	BlurDirection(gradd, graddBlur, 11);
+	BlurDirection(gradd, graddBlur, 5);
 
 	Mat graddBlur_out, gradfBlur_out;		//輸出用(8UC3、8UC3)
 	DrawColorSystem(graddBlur, graddBlur_out);
@@ -163,21 +163,38 @@ int main()
 	string gradfDivide_outfile = filepath + "\\" + infilename + "_7.2_DIVIDEF.png";			//線分割混合模式(場)
 	imwrite(gradfDivide_outfile, gradfDivide_out);
 
+	/*滯後切割*/
+
+	Mat gradmHC, graddHC;		//滯後切割(8UC1、32FC1)
+	HysteresisCut(gradmDivide, graddBlur, hardmixArea, gradmHC, graddHC);
+
+	Mat gradmHC_out, graddHC_out, gradfHC_out;		//輸出用(8UC1、8UC3、8UC3)
+	DrawAbsGraySystem(gradmHC, gradmHC_out);
+	DrawColorSystem(graddHC, graddHC_out);
+	DrawColorSystem(gradmHC, graddHC, gradfHC_out);
+
+	string gradmHC_outfile = filepath + "\\" + infilename + "_8.1_HCM.png";			//滯後切割(幅值)
+	imwrite(gradmHC_outfile, gradmHC_out);
+	string graddHC_outfile = filepath + "\\" + infilename + "_8.2_HCD.png";			//滯後切割(方向)
+	imwrite(graddHC_outfile, graddHC_out);
+	string gradfHC_outfile = filepath + "\\" + infilename + "_8.3_HCF.png";			//滯後切割(場)
+	imwrite(gradfHC_outfile, gradfHC_out);
+
 	/*非極大值抑制*/
 
 	Mat gradmNMS, graddNMS;			//非最大值抑制(8UC1、32FC1)
-	NonMaximumSuppression(gradmDivide, graddBlur, gradmNMS, graddNMS);
+	NonMaximumSuppression(gradmHC, graddHC, gradmNMS, graddNMS);
 
 	Mat gradmNMS_out, graddNMS_out, gradfNMS_out;		//輸出用(8UC1、8UC3、8UC3)
 	DrawAbsGraySystem(gradmNMS, gradmNMS_out);
 	DrawColorSystem(graddNMS, graddNMS_out);
 	DrawColorSystem(gradmNMS, graddNMS, gradfNMS_out);
 
-	string gradmNMS_outfile = filepath + "\\" + infilename + "_8.1_NMSM.png";			//非最大值抑制(幅值)
+	string gradmNMS_outfile = filepath + "\\" + infilename + "_9.1_NMSM.png";			//非最大值抑制(幅值)
 	imwrite(gradmNMS_outfile, gradmNMS_out);
-	string graddNMS_outfile = filepath + "\\" + infilename + "_8.2_NMSD.png";			//非最大值抑制(方向)
+	string graddNMS_outfile = filepath + "\\" + infilename + "_9.2_NMSD.png";			//非最大值抑制(方向)
 	imwrite(graddNMS_outfile, graddNMS_out);
-	string gradfNMS_outfile = filepath + "\\" + infilename + "_8.3_NMSF.png";			//非最大值抑制(場)
+	string gradfNMS_outfile = filepath + "\\" + infilename + "_9.3_NMSF.png";			//非最大值抑制(場)
 	imwrite(gradfNMS_outfile, gradfNMS_out);
 
 	/*清除異方向點*/
@@ -190,11 +207,11 @@ int main()
 	DrawColorSystem(graddCDD, graddCDD_out);
 	DrawColorSystem(gradmCDD, graddCDD, gradfCDD_out);
 
-	string gradmCDD_outfile = filepath + "\\" + infilename + "_9.1_CDDM.png";			//清除異方向點(幅值)
+	string gradmCDD_outfile = filepath + "\\" + infilename + "_10.1_CDDM.png";			//清除異方向點(幅值)
 	imwrite(gradmCDD_outfile, gradmCDD_out);
-	string graddCDD_outfile = filepath + "\\" + infilename + "_9.2_CDDD.png";			//清除異方向點(方向)
+	string graddCDD_outfile = filepath + "\\" + infilename + "_10.2_CDDD.png";			//清除異方向點(方向)
 	imwrite(graddCDD_outfile, graddCDD_out);
-	string gradfCDD_outfile = filepath + "\\" + infilename + "_9.3_CDDF.png";			//清除異方向點(場)
+	string gradfCDD_outfile = filepath + "\\" + infilename + "_10.3_CDDF.png";			//清除異方向點(場)
 	imwrite(gradfCDD_outfile, gradfCDD_out);
 
 	/*斷線連通*/
@@ -207,18 +224,18 @@ int main()
 	DrawColorSystem(graddCBL, graddCBL_out);
 	DrawColorSystem(gradmCBL, graddCBL, gradfCBL_out);
 
-	string gradmCBL_outfile = filepath + "\\" + infilename + "_10.1_CBLM.png";			//斷線連通(幅值)
+	string gradmCBL_outfile = filepath + "\\" + infilename + "_11.1_CBLM.png";			//斷線連通(幅值)
 	imwrite(gradmCBL_outfile, gradmCBL_out);
-	string graddCBL_outfile = filepath + "\\" + infilename + "_10.2_CBLD.png";			//斷線連通(方向)
+	string graddCBL_outfile = filepath + "\\" + infilename + "_11.2_CBLD.png";			//斷線連通(方向)
 	imwrite(graddCBL_outfile, graddCBL_out);
-	string gradfCBL_outfile = filepath + "\\" + infilename + "_10.3_CBLF.png";			//斷線連通(場)
+	string gradfCBL_outfile = filepath + "\\" + infilename + "_11.3_CBLF.png";			//斷線連通(場)
 	imwrite(gradfCBL_outfile, gradfCBL_out);
 
-	/*滯後閥值*/
+	/*二值化*/
 
-	Mat lineHT;		//滯後閥值(8UC1(BW))
-	HysteresisThreshold(gradmCBL, lineHT, 200, 2);
-	string LHT_outfile = filepath + "\\" + infilename + "_11_HT.png";			//滯後閥值
+	Mat lineHT;		//二值化(8UC1(BW))
+	threshold(gradmCBL, lineHT, 1, 255, THRESH_BINARY);
+	string LHT_outfile = filepath + "\\" + infilename + "_12_BW.png";			//二值化
 	imwrite(LHT_outfile, lineHT);
 
 	/*對稱端點連通*/
@@ -231,11 +248,11 @@ int main()
 	DrawColorSystem(graddSCBL, graddSCBL_out);
 	DrawColorSystem(gradmSCBL, graddSCBL, gradfSCBL_out);
 
-	string LSCBL_outfile = filepath + "\\" + infilename + "_12.0_SCBL.png";				//對稱端點連通(二值)
+	string LSCBL_outfile = filepath + "\\" + infilename + "_13.0_SCBL.png";				//對稱端點連通(二值)
 	imwrite(LSCBL_outfile, lineSCBL);
-	string gradmSCBL_outfile = filepath + "\\" + infilename + "_12.1_SCBLM.png";			//對稱端點連通(幅值)
+	string gradmSCBL_outfile = filepath + "\\" + infilename + "_13.1_SCBLM.png";			//對稱端點連通(幅值)
 	imwrite(gradmSCBL_outfile, gradmSCBL_out);
-	string graddSCBL_outfile = filepath + "\\" + infilename + "_12.2_SCBLD.png";			//對稱端點連通(方向)
+	string graddSCBL_outfile = filepath + "\\" + infilename + "_13.2_SCBLD.png";			//對稱端點連通(方向)
 	imwrite(graddSCBL_outfile, graddSCBL_out);
 	string gradfSCBL_outfile = filepath + "\\" + infilename + "_12.3_SCBLF.png";			//對稱端點連通(場)
 	imwrite(gradfSCBL_outfile, gradfSCBL_out);
@@ -244,7 +261,7 @@ int main()
 
 	Mat lineCIP;	//去除孤立點(8UC1(BW))
 	ClearSpecialPoint(lineSCBL, lineCIP, 0, 1, 0);
-	string LCIP_outfile = filepath + "\\" + infilename + "_13_CIP.png";			//去除孤立點
+	string LCIP_outfile = filepath + "\\" + infilename + "_14_CIP.png";			//去除孤立點
 	imwrite(LCIP_outfile, lineCIP);
 
 	/*強制端點連通*/
@@ -257,13 +274,13 @@ int main()
 	DrawColorSystem(graddACBL, graddACBL_out);
 	DrawColorSystem(gradmACBL, graddACBL, gradfACBL_out);
 
-	string LACBL_outfile = filepath + "\\" + infilename + "_14.0_ACBL.png";				//強制端點連通(二值)
+	string LACBL_outfile = filepath + "\\" + infilename + "_15.0_ACBL.png";				//強制端點連通(二值)
 	imwrite(LACBL_outfile, lineACBL);
-	string gradmACBL_outfile = filepath + "\\" + infilename + "_14.1_ACBLM.png";			//強制端點連通(幅值)
+	string gradmACBL_outfile = filepath + "\\" + infilename + "_15.1_ACBLM.png";			//強制端點連通(幅值)
 	imwrite(gradmACBL_outfile, gradmACBL_out);
-	string graddACBL_outfile = filepath + "\\" + infilename + "_14.2_ACBLD.png";			//強制端點連通(方向)
+	string graddACBL_outfile = filepath + "\\" + infilename + "_15.2_ACBLD.png";			//強制端點連通(方向)
 	imwrite(graddACBL_outfile, graddACBL_out);
-	string gradfACBL_outfile = filepath + "\\" + infilename + "_14.3_ACBLF.png";			//強制端點連通(場)
+	string gradfACBL_outfile = filepath + "\\" + infilename + "_15.3_ACBLF.png";			//強制端點連通(場)
 	imwrite(gradfACBL_outfile, gradfACBL_out);
 
 	/*去除雜線*/
@@ -271,7 +288,7 @@ int main()
 	Mat lineCNL;	//去除雜線(8UC1(BW))
 	//ClearSpecialPoint(lineACBL, lineCNL, blurLineSize, 5, 1);
 	ClearNoise(lineACBL, lineCNL, 20, 8, 1);
-	string LCNL_outfile = filepath + "\\" + infilename + "_15_CNL.png";			//去除雜線
+	string LCNL_outfile = filepath + "\\" + infilename + "_16_CNL.png";			//去除雜線
 	imwrite(LCNL_outfile, lineCNL);
 
 	///*分水嶺演算法切割*/

@@ -66,11 +66,14 @@ void GradientField(InputArray _grad_x, InputArray _grad_y, OutputArray _gradient
 /*計算梯度幅值及方向*/
 void CalculateGradient(InputArray _gradientField, OutputArray _gradm, OutputArray _gradd);
 
+/*梯度方向模糊*/
+void BlurDirection(InputArray _gradd, OutputArray _graddblur, int blurLineSize);
+
 /*基於線的分割混合模式*/
 void DivideLine(InputArray _gradm, InputArray _gradmblur, OutputArray _gradmDivide);
 
-/*梯度方向模糊*/
-void BlurDirection(InputArray _gradd, OutputArray _graddblur, int blurLineSize);
+/*滯後切割*/
+void HysteresisCut(InputArray _gradm, InputArray _gradd, InputArray _bwImage, OutputArray _gradmHC, OutputArray _graddHC);
 
 /*非極大值抑制*/
 void NonMaximumSuppression(InputArray _gradm, InputArray _gradd, OutputArray _gradmNMS, OutputArray _graddNMS);

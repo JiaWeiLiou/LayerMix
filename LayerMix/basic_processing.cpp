@@ -797,23 +797,6 @@ void CalculateGradient(InputArray _gradf, OutputArray _gradm, OutputArray _gradd
 		}
 }
 
-/*基於線的分割混合模式*/
-void DivideLine(InputArray _gradm, InputArray _gradmblur, OutputArray _gradmDivide)
-{
-	Mat gradm = _gradm.getMat();
-	CV_Assert(gradm.type() == CV_8UC1);
-
-	Mat gradmblur = _gradmblur.getMat();
-	CV_Assert(gradmblur.type() == CV_8UC1);
-
-	_gradmDivide.create(gradm.size(), CV_8UC1);
-	Mat gradmDivide = _gradmDivide.getMat();
-
-	for (int i = 0; i < gradm.rows; ++i)
-		for (int j = 0; j < gradm.cols; ++j)
-			gradmDivide.at<uchar>(i, j) = ((double)gradmblur.at<uchar>(i, j) / (double)gradm.at<uchar>(i, j) >= 1 || gradm.at<uchar>(i, j) == 0 || gradmblur.at<uchar>(i, j) == 0) ? 0 : (1 - (double)gradmblur.at<uchar>(i, j) / (double)gradm.at<uchar>(i, j)) * 255;
-}
-
 /*梯度方向模糊*/
 void BlurDirection(InputArray _gradd, OutputArray _graddblur, int blurLineSize)
 {
@@ -851,6 +834,106 @@ void BlurDirection(InputArray _gradd, OutputArray _graddblur, int blurLineSize)
 				graddblur.at<float>(i, j) = atan2(sinsum, cossum);
 			}
 			else { graddblur.at<float>(i, j) = -1000.0f; }
+}
+
+/*基於線的分割混合模式*/
+void DivideLine(InputArray _gradm, InputArray _gradmblur, OutputArray _gradmDivide)
+{
+	Mat gradm = _gradm.getMat();
+	CV_Assert(gradm.type() == CV_8UC1);
+
+	Mat gradmblur = _gradmblur.getMat();
+	CV_Assert(gradmblur.type() == CV_8UC1);
+
+	_gradmDivide.create(gradm.size(), CV_8UC1);
+	Mat gradmDivide = _gradmDivide.getMat();
+
+	for (int i = 0; i < gradm.rows; ++i)
+		for (int j = 0; j < gradm.cols; ++j)
+			gradmDivide.at<uchar>(i, j) = ((double)gradmblur.at<uchar>(i, j) / (double)gradm.at<uchar>(i, j) >= 1 || gradm.at<uchar>(i, j) == 0 || gradmblur.at<uchar>(i, j) == 0) ? 0 : (1 - (double)gradmblur.at<uchar>(i, j) / (double)gradm.at<uchar>(i, j)) * 255;
+}
+
+/*滯後切割*/
+void HysteresisCut(InputArray _gradm, InputArray _gradd, InputArray _bwImage, OutputArray _gradmHC, OutputArray _graddHC)
+{
+	Mat gradm = _gradm.getMat();
+	CV_Assert(gradm.type() == CV_8UC1);
+
+	Mat gradd = _gradd.getMat();
+	CV_Assert(gradd.type() == CV_32FC1);
+
+	Mat bwImage = _bwImage.getMat();
+	CV_Assert(bwImage.type() == CV_8UC1);
+
+	_gradmHC.create(gradm.size(), CV_8UC1);
+	Mat gradmHC = _gradmHC.getMat();
+
+	_graddHC.create(gradd.size(), CV_32FC1);
+	Mat graddHC = _graddHC.getMat();
+
+	Mat UT(gradd.size(), CV_8UC1, Scalar(0));		//上閥值
+
+	for (int i = 0; i < gradm.rows; ++i)
+		for (int j = 0; j < gradm.cols; ++j)
+			if (bwImage.at<uchar>(i, j) == 0 && gradm.at<uchar>(i, j) != 0)
+				UT.at<uchar>(i, j) = 255;
+	
+	Mat MT(gradm.size(), CV_8UC1, Scalar(0));	//中閥值
+	for (int i = 0; i < gradm.rows; ++i)
+		for (int j = 0; j < gradm.cols; ++j)
+			if (bwImage.at<uchar>(i, j) == 255 && gradm.at<uchar>(i, j) != 0)
+				MT.at<uchar>(i, j) = 255;
+
+	Mat labelImg;
+	int labelNum = bwlabel(MT, labelImg, 4);
+	labelNum = labelNum + 1;	// include label 0
+	int* labeltable = new int[labelNum];		// initialize label table with zero  
+	memset(labeltable, 0, labelNum * sizeof(int));
+
+	for (int i = 0; i < gradm.rows; ++i)
+		for (int j = 0; j < gradm.cols; ++j)
+		{
+			//+ - + - + - +
+			//| B | C | D |
+			//+ - + - + - +
+			//| E | A | F |
+			//+ - + - + - +
+			//| G | H | I |
+			//+ - + - + - +
+
+			int C, E;
+
+			if (i == 0) { C = 0; }
+			else { C = UT.at<uchar>(i - 1, j); }
+
+			if (j == 0) { E = 0; }
+			else { E = UT.at<uchar>(i, j - 1); }
+
+			// apply 8 connectedness  
+			if (C || E)	{ ++labeltable[labelImg.at<int>(i, j)];	}
+		}
+
+	labeltable[0] = 0;		//clear 0 label
+
+	Mat mask(gradm.size(), CV_8UC1, Scalar(0));
+	for (int i = 0; i < labelImg.rows; i++)
+		for (int j = 0; j < labelImg.cols; j++)
+			if (labeltable[labelImg.at<int>(i, j)] > 0 || UT.at<uchar>(i, j) == 255) { mask.at<uchar>(i, j) = 255; }
+	delete[] labeltable;
+	labeltable = nullptr;
+
+	for (int i = 0; i < gradm.rows; ++i)
+		for (int j = 0; j < gradm.cols; ++j)
+			if (mask.at<uchar>(i, j) == 255)
+			{
+				gradmHC.at<uchar>(i, j) = gradm.at<uchar>(i, j);
+				graddHC.at<float>(i, j) = gradd.at<float>(i, j);
+			}
+			else
+			{
+				gradmHC.at<uchar>(i, j) = 0;
+				graddHC.at<float>(i, j) = -1000.0f;
+			}
 }
 
 /*非極大值抑制*/
