@@ -50,12 +50,16 @@ int main()
 	{
 		cvtColor(srcImage, grayImage, CV_BGR2GRAY);
 
-		string gray_outfile = filepath + "\\" + infilename + "_0_GRAY.png";		//灰階影像
+		string gray_outfile = filepath + "\\" + infilename + "_0.0_GRAY.png";		//灰階影像(灰階)
 		imwrite(gray_outfile, grayImage);
 	}
-	else
-		grayImage = srcImage;
+	else { grayImage = srcImage; }
 
+	Mat grayColor_out;		//輸出用(8UC3)
+	DrawColorbar(grayImage, grayColor_out);
+
+	string grayColor_outfile = filepath + "\\" + infilename + "_0.1_GRAY.png";		//灰階影像(彩色)
+	imwrite(grayColor_outfile, grayColor_out);
 
 	/****基於面的影像萃取****/
 
@@ -109,10 +113,11 @@ int main()
 	Mat gradm, gradd;		//梯度幅值及梯度方向(32FC1)
 	CalculateGradient(gradf, gradm, gradd);
 
-	Mat gradx_out, grady_out, gradm_out, gradd_out, gradf_out;		//輸出用(8UC1、8UC1、8UC1、8UC3、8UC3)
+	Mat gradx_out, grady_out, gradm_out, gradc_out,gradd_out, gradf_out;		//輸出用(8UC1、8UC1、8UC1、8UC3、8UC3、8UC3)
 	DrawAbsGraySystem(gradx, gradx_out);
 	DrawAbsGraySystem(grady, grady_out);
 	DrawAbsGraySystem(gradm, gradm_out);
+	DrawColorBar(gradm, gradc_out);
 	DrawColorSystem(gradd, gradd_out);
 	DrawColorSystem(gradf, gradf_out);
 
@@ -122,9 +127,11 @@ int main()
 	imwrite(grady_outfile, grady_out);
 	string gradm_outfile = filepath + "\\" + infilename + "_4.3_GM.png";			//輸出用影像梯度(幅值)
 	imwrite(gradm_outfile, gradm_out);
-	string gradd_outfile = filepath + "\\" + infilename + "_4.4_GD.png";			//輸出用影像梯度(方向)
+	string gradc_outfile = filepath + "\\" + infilename + "_4.4_GC.png";			//輸出用影像梯度(彩色)
+	imwrite(gradc_outfile, gradc_out);
+	string gradd_outfile = filepath + "\\" + infilename + "_4.5_GD.png";			//輸出用影像梯度(方向)
 	imwrite(gradd_outfile, gradd_out);
-	string gradf_outfile = filepath + "\\" + infilename + "_4.5_GF.png";			//輸出用影像梯度(場)
+	string gradf_outfile = filepath + "\\" + infilename + "_4.6_GF.png";			//輸出用影像梯度(場)
 	imwrite(gradf_outfile, gradf_out);
 
 	/*方向模糊*/
@@ -146,7 +153,7 @@ int main()
 	Mat gradmBlur;	//模糊幅值(8UC1)	
 	GaussianBlur(gradm, gradmBlur, Size(blurLineSize, blurLineSize), 0, 0);
 
-	string blurM_outfile = filepath + "\\" + infilename + "_6_BLURM.png";			//模糊幅值
+	string blurM_outfile = filepath + "\\" + infilename + "_6_BLURM.png";			//模糊幅值(幅值)
 	imwrite(blurM_outfile, gradmBlur);
 
 	/*線分割混合模式*/
@@ -218,7 +225,8 @@ int main()
 
 	Mat lineHT;		//二值化(8UC1(BW))
 	threshold(gradmCDD, lineHT, 1, 255, THRESH_BINARY);
-	string LHT_outfile = filepath + "\\" + infilename + "_11_BW.png";			//二值化
+
+	string LHT_outfile = filepath + "\\" + infilename + "_11_BW.png";			//二值化(二值)
 	imwrite(LHT_outfile, lineHT);
 
 	/*對稱端點連通*/
@@ -244,7 +252,8 @@ int main()
 
 	Mat lineCP;	//去除孤立點(8UC1(BW))
 	ClearPoint(lineSCL, lineCP, 0, 1, 0);
-	string LCP_outfile = filepath + "\\" + infilename + "_13_CP.png";			//去除孤立點
+
+	string LCP_outfile = filepath + "\\" + infilename + "_13_CP.png";			//去除孤立點(二值)
 	imwrite(LCP_outfile, lineCP);
 
 	/*強制端點連通*/
@@ -271,10 +280,28 @@ int main()
 	Mat lineCNL;	//去除雜線(8UC1(BW))
 	//ClearSpecialPoint(lineACBL, lineCNL, blurLineSize, 5, 1);
 	ClearNoise(lineACL, lineCNL, 30, 8, 1);
-	string LCNL_outfile = filepath + "\\" + infilename + "_15_CNL.png";			//去除雜線
+
+	string LCNL_outfile = filepath + "\\" + infilename + "_15_CNL.png";			//去除雜線(二值)
 	imwrite(LCNL_outfile, lineCNL);
 
+
 	/****結合面與線的萃取結果****/
+
+	/*結合面與線*/
+
+	Mat combine;	//結合面與線(8UC1(BW))
+	BWCombine(clearBlackArea, lineCNL, combine);
+
+	Mat combineLabel_out, combineImage_out;		//輸出用(8UC3、8UC3)
+	DrawLabel(combine, combineLabel_out);
+	DrawEdge(combine, srcImage, combineImage_out);
+
+	string combineBW_outfile = filepath + "\\" + infilename + "_16.0_COMBINE.png";				//結合面與線(二值)
+	imwrite(combineBW_outfile, combine);
+	string combineLabel_outfile = filepath + "\\" + infilename + "_16.1_COMBINE.png";			//結合面與線(標籤)
+	imwrite(combineLabel_outfile, combineLabel_out);
+	string combineImage_outfile = filepath + "\\" + infilename + "_16.2_COMBINE.png";			//結合面與線(疊圖)
+	imwrite(combineImage_outfile, combineImage_out);
 
 	///*分水嶺演算法切割*/
 

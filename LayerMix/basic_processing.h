@@ -36,6 +36,9 @@ void pointlabel(InputArray _gradm, OutputArray _labels);
 /*創建色環*/
 void makecolorwheel(vector<Scalar> &colorwheel);
 
+/*將灰階圖片轉以色條顯示*/
+void DrawColorBar(InputArray _grayImage, OutputArray _colorbarImage, int upperbound = 255, int lowerbound = 0);
+
 /*將圖片轉以色環方向場顯示(輸入梯度場或梯度方向)*/
 void DrawColorSystem(InputArray _field, OutputArray _colorField);
 
@@ -44,6 +47,12 @@ void DrawColorSystem(InputArray _gradm, InputArray _gradd, OutputArray _colorFie
 
 /*將圖片轉線性拉伸並以灰階值顯示*/
 void DrawAbsGraySystem(InputArray _field, OutputArray _grayField);
+
+/*將結果以標籤顯示*/
+void DrawLabel(InputArray _bwImage, OutputArray _combineLabel);
+
+/*將結果顯示在彩色圖像上*/
+void DrawEdge(InputArray _bwImage, InputArray _realImage, OutputArray _combineImage);
 
 /*圖層混合模式*/
 void LayerMix(InputArray _grayImage, InputArray _blurImage, OutputArray _mixImage);
@@ -109,3 +118,8 @@ void ClearPoint(InputArray _bwLine, OutputArray _bwLineCP, int border = 0, int i
 // flagD = 0  -> 只搜尋90度範圍
 // flagD = 1  -> 可搜尋180度範圍
 void BWConnectLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine, OutputArray _gradmCL, OutputArray _graddCL, OutputArray _bwLineCL, int startSpace, int endSpace, int degree, int flagT, bool flagD);
+
+/*結合線與面的二值邊緣*/
+// flag = 0  -> 物體為白色
+// flag = 1  -> 背景為白色
+void BWCombine(InputArray _bwArea, InputArray _bwLine, OutputArray _edge, bool flag = 1);

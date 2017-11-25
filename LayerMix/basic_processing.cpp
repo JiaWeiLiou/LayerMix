@@ -266,6 +266,74 @@ void makecolorwheel(vector<Scalar> &colorwheel)
 	for (int i = 0; i < MR; i++) colorwheel.push_back(Scalar(255, 0, 255 - 255 * i / MR));
 }
 
+/*創建色條*/
+void makecolorbar(vector<Scalar> &colorbar)
+{
+	vector<Scalar> maincolor;
+
+	maincolor.push_back(Scalar(127.5, 0, 0));      //深紅色
+	maincolor.push_back(Scalar(255, 0, 0));		   //紅色
+	maincolor.push_back(Scalar(255, 127.5, 0));	   //紅色至黃色
+	maincolor.push_back(Scalar(255, 255, 0));	   //黃色
+	maincolor.push_back(Scalar(127.5, 255, 0));	   //黃色至綠色
+	maincolor.push_back(Scalar(0, 255, 0));		   //綠色
+	maincolor.push_back(Scalar(0, 255, 127.5));	   //綠色至青色
+	maincolor.push_back(Scalar(0, 255, 255));	   //青色
+	maincolor.push_back(Scalar(0, 127.5, 255));	   //青色至藍色
+	maincolor.push_back(Scalar(0, 0, 255));		   //藍色
+	maincolor.push_back(Scalar(0, 0, 127.5));      //深藍色
+
+	int layer = 15;		//各漸層漸變階層數
+
+	for (int i = 0; i < maincolor.size() - 1; i++)
+	{
+		for (int j = 0; j < layer; j++)
+		{
+			double r = maincolor[i][0] + (maincolor[i + 1][0] - maincolor[i][0]) / layer*j;
+			double g = maincolor[i][1] + (maincolor[i + 1][1] - maincolor[i][1]) / layer*j;
+			double b = maincolor[i][2] + (maincolor[i + 1][2] - maincolor[i][2]) / layer*j;
+			colorbar.push_back(Scalar(r, g, b));
+		}
+	}
+}
+
+/*將灰階圖片轉以色條顯示*/
+void DrawColorBar(InputArray _grayImage, OutputArray _colorbarImage, int upperbound, int lowerbound)
+{
+	Mat grayImage = _grayImage.getMat();
+	CV_Assert(grayImage.type() == CV_8UC1);
+
+	_colorbarImage.create(grayImage.size(), CV_8UC3);
+	Mat colorbarImage = _colorbarImage.getMat();
+
+	static vector<Scalar> colorbar; //Scalar i,g,b  
+	if (colorbar.empty()) { makecolorbar(colorbar); }
+
+	int maxrad = upperbound - lowerbound + 1;
+
+	for (int i = 0; i < colorbarImage.rows; ++i)
+		for (int j = 0; j < colorbarImage.cols; ++j)
+		{
+			uchar *data = colorbarImage.data + colorbarImage.step[0] * i + colorbarImage.step[1] * j;
+
+			float fk = (1- (float)grayImage.at<uchar>(i, j) / (float)maxrad) * (colorbar.size() - 1);  //計算灰度值對應之索引位置
+			int k0 = floor(fk);
+			int k1 = ceil(fk);
+			float f = fk - k0;
+
+			float col0 = 0.0f;
+			float col1 = 0.0f;
+			float col = 0.0f;
+			for (int b = 0; b < 3; b++)
+			{
+				col0 = colorbar[k0][b] / 255.0f;
+				col1 = colorbar[k1][b] / 255.0f;
+				col = (1 - f) * col0 + f * col1;
+				data[2 - b] = (int)(255.0f * col);
+			}
+		}
+}
+
 /*將圖片轉以色環方向場顯示(輸入梯度場或梯度方向)*/
 void DrawColorSystem(InputArray _field, OutputArray _colorField)
 {
@@ -515,6 +583,93 @@ void DrawAbsGraySystem(InputArray _field, OutputArray _grayField)
 				float fy = field.at<Vec2f>(i, j)[1];
 				float absvalue = sqrt(fx * fx + fy * fy);
 				grayField.at<uchar>(i, j) = (absvalue / maxvalue) * 255;
+			}
+	}
+}
+
+/*將結果以標籤顯示*/
+void DrawLabel(InputArray _bwImage, OutputArray _combineLabel)
+{
+	Mat bwImage = _bwImage.getMat();
+	CV_Assert(bwImage.type() == CV_8UC1);
+
+	_combineLabel.create(bwImage.size(), CV_8UC3);
+	Mat combineLabel = _combineLabel.getMat();
+
+	Mat object(bwImage.size(), CV_8UC1);
+	for (int i = 0; i < bwImage.rows; i++)
+		for (int j = 0; j < bwImage.cols; j++)
+			if (bwImage.at<uchar>(i, j) == 255) { object.at<uchar>(i, j) = 0; }
+			else { object.at<uchar>(i, j) = 255; }
+
+			Mat labels;
+			int objectNum = bwlabel(object, labels, 4);
+
+			RNG rng(12345);
+			vector<Scalar> color;
+
+			color.push_back(Scalar(0, 0, 0));
+			for (int i = 1; i <= objectNum; i++) { color.push_back(Scalar(rng.uniform(1, 255), rng.uniform(1, 255), rng.uniform(1, 255))); }
+
+			for (int i = 0; i < bwImage.rows; i++)
+				for (int j = 0; j < bwImage.cols; j++)
+				{
+					combineLabel.at<Vec3b>(i, j)[0] = color[labels.at<int>(i, j)][0];
+					combineLabel.at<Vec3b>(i, j)[1] = color[labels.at<int>(i, j)][1];
+					combineLabel.at<Vec3b>(i, j)[2] = color[labels.at<int>(i, j)][2];
+				}
+}
+
+/*將邊緣偵測結果顯示在彩色圖像上*/
+void DrawEdge(InputArray _bwImage, InputArray _realImage, OutputArray _combineImage)
+{
+	Mat bwImage = _bwImage.getMat();
+	CV_Assert(bwImage.type() == CV_8UC1);
+
+	Mat realImage = _realImage.getMat();
+
+	if (realImage.type() == CV_8UC1)
+	{
+		_combineImage.create(realImage.size(), CV_8UC3);
+		Mat combineImage = _combineImage.getMat();
+
+		for (int i = 0; i < bwImage.rows; i++)
+			for (int j = 0; j < bwImage.cols; j++)
+			{
+				if (bwImage.at<uchar>(i, j) == 255)
+				{
+					combineImage.at<Vec3b>(i, j)[0] = 255;
+					combineImage.at<Vec3b>(i, j)[1] = 0;
+					combineImage.at<Vec3b>(i, j)[2] = 0;
+				}
+				else
+				{
+					combineImage.at<Vec3b>(i, j)[0] = realImage.at<uchar>(i, j);
+					combineImage.at<Vec3b>(i, j)[1] = realImage.at<uchar>(i, j);
+					combineImage.at<Vec3b>(i, j)[2] = realImage.at<uchar>(i, j);
+				}
+			}
+	}
+	else if (realImage.type() == CV_8UC3)
+	{
+		_combineImage.create(realImage.size(), CV_8UC3);
+		Mat combineImage = _combineImage.getMat();
+
+		for (int i = 0; i < bwImage.rows; i++)
+			for (int j = 0; j < bwImage.cols; j++)
+			{
+				if (bwImage.at<uchar>(i, j) == 255)
+				{
+					combineImage.at<Vec3b>(i, j)[0] = 255;
+					combineImage.at<Vec3b>(i, j)[1] = 0;
+					combineImage.at<Vec3b>(i, j)[2] = 0;
+				}
+				else
+				{
+					combineImage.at<Vec3b>(i, j)[0] = realImage.at<Vec3b>(i, j)[0];
+					combineImage.at<Vec3b>(i, j)[1] = realImage.at<Vec3b>(i, j)[1];
+					combineImage.at<Vec3b>(i, j)[2] = realImage.at<Vec3b>(i, j)[2];
+				}
 			}
 	}
 }
@@ -877,7 +1032,7 @@ void HysteresisCut(InputArray _gradm, InputArray _gradd, InputArray _bwImage, Ou
 		for (int j = 0; j < gradm.cols; ++j)
 			if (bwImage.at<uchar>(i, j) == 0 && gradm.at<uchar>(i, j) != 0)
 				UT.at<uchar>(i, j) = 255;
-	
+
 	Mat MT(gradm.size(), CV_8UC1, Scalar(0));	//中閥值
 	for (int i = 0; i < gradm.rows; ++i)
 		for (int j = 0; j < gradm.cols; ++j)
@@ -910,7 +1065,7 @@ void HysteresisCut(InputArray _gradm, InputArray _gradd, InputArray _bwImage, Ou
 			else { E = UT.at<uchar>(i, j - 1); }
 
 			// apply 8 connectedness  
-			if (C || E)	{ ++labeltable[labelImg.at<int>(i, j)];	}
+			if (C || E) { ++labeltable[labelImg.at<int>(i, j)]; }
 		}
 
 	labeltable[0] = 0;		//clear 0 label
@@ -1850,4 +2005,30 @@ void BWConnectLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine, Out
 			if (graddCL.at<float>(i, j) != -1000.0f) { bwLineCL.at<uchar>(i, j) = 255; }
 			else { bwLineCL.at<uchar>(i, j) = 0; }
 		}
+}
+
+/*結合線與面的二值邊緣*/
+void BWCombine(InputArray _bwArea, InputArray _bwLine, OutputArray _edge, bool flag)
+{
+	Mat bwArea = _bwArea.getMat();
+	CV_Assert(bwArea.type() == CV_8UC1);
+
+	Mat bwLine = _bwLine.getMat();
+	CV_Assert(bwLine.type() == CV_8UC1);
+
+	_edge.create(bwArea.size(), CV_8UC1);
+	Mat edge = _edge.getMat();
+
+	int value0 = 0;
+	int value1 = 255;
+	if (flag)
+	{
+		value0 = 255;
+		value1 = 0;
+	}
+
+	for (int i = 0; i < edge.rows; ++i)
+		for (int j = 0; j < edge.cols; ++j)
+			if (bwArea.at<uchar>(i, j) == 0 || bwLine.at<uchar>(i, j) == 255) { edge.at<uchar>(i, j) = value0; }
+			else { edge.at<uchar>(i, j) = value1; }
 }
