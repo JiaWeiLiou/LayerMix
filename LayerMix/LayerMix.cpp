@@ -166,7 +166,7 @@ int main()
 	/*滯後切割*/
 
 	Mat gradmHC, graddHC;		//滯後切割(8UC1、32FC1)
-	HysteresisCut(gradmDivide, graddBlur, hardmixArea, gradmHC, graddHC);
+	HysteresisCut(gradmDivide, graddBlur, clearBlackArea, gradmHC, graddHC);
 
 	Mat gradmHC_out, graddHC_out, gradfHC_out;		//輸出用(8UC1、8UC3、8UC3)
 	DrawAbsGraySystem(gradmHC, gradmHC_out);
@@ -214,82 +214,67 @@ int main()
 	string gradfCDD_outfile = filepath + "\\" + infilename + "_10.3_CDDF.png";			//清除異方向點(場)
 	imwrite(gradfCDD_outfile, gradfCDD_out);
 
-	/*斷線連通*/
-
-	Mat gradmCBL, graddCBL;			//斷線連通(8UC1、32FC1)
-	ConnectBreakLine(gradmCDD, graddCDD, gradmCBL, graddCBL, 2, 5, 60, 0, 0);
-
-	Mat gradmCBL_out, graddCBL_out, gradfCBL_out;		//輸出用(8UC1、8UC3、8UC3)
-	DrawAbsGraySystem(gradmCBL, gradmCBL_out);
-	DrawColorSystem(graddCBL, graddCBL_out);
-	DrawColorSystem(gradmCBL, graddCBL, gradfCBL_out);
-
-	string gradmCBL_outfile = filepath + "\\" + infilename + "_11.1_CBLM.png";			//斷線連通(幅值)
-	imwrite(gradmCBL_outfile, gradmCBL_out);
-	string graddCBL_outfile = filepath + "\\" + infilename + "_11.2_CBLD.png";			//斷線連通(方向)
-	imwrite(graddCBL_outfile, graddCBL_out);
-	string gradfCBL_outfile = filepath + "\\" + infilename + "_11.3_CBLF.png";			//斷線連通(場)
-	imwrite(gradfCBL_outfile, gradfCBL_out);
-
 	/*二值化*/
 
 	Mat lineHT;		//二值化(8UC1(BW))
-	threshold(gradmCBL, lineHT, 1, 255, THRESH_BINARY);
-	string LHT_outfile = filepath + "\\" + infilename + "_12_BW.png";			//二值化
+	threshold(gradmCDD, lineHT, 1, 255, THRESH_BINARY);
+	string LHT_outfile = filepath + "\\" + infilename + "_11_BW.png";			//二值化
 	imwrite(LHT_outfile, lineHT);
 
 	/*對稱端點連通*/
 
-	Mat gradmSCBL, graddSCBL, lineSCBL;			//短對稱端點連通(8UC1、32FC1、8UC1(BW))
-	BWConnectBreakLine(gradmCBL, graddCBL, lineHT, gradmSCBL, graddSCBL, lineSCBL, 2, 20, 90, 0, 0);
+	Mat gradmSCL, graddSCL, lineSCL;			//短對稱端點連通(8UC1、32FC1、8UC1(BW))
+	BWConnectLine(gradmCDD, graddCDD, lineHT, gradmSCL, graddSCL, lineSCL, 2, 5, 60, 0, 0);
 
-	Mat gradmSCBL_out, graddSCBL_out, gradfSCBL_out;		//輸出用(8UC1、8UC3、8UC3)
-	DrawAbsGraySystem(gradmSCBL, gradmSCBL_out);
-	DrawColorSystem(graddSCBL, graddSCBL_out);
-	DrawColorSystem(gradmSCBL, graddSCBL, gradfSCBL_out);
+	Mat gradmSCL_out, graddSCL_out, gradfSCL_out;		//輸出用(8UC1、8UC3、8UC3)
+	DrawAbsGraySystem(gradmSCL, gradmSCL_out);
+	DrawColorSystem(graddSCL, graddSCL_out);
+	DrawColorSystem(gradmSCL, graddSCL, gradfSCL_out);
 
-	string LSCBL_outfile = filepath + "\\" + infilename + "_13.0_SCBL.png";				//對稱端點連通(二值)
-	imwrite(LSCBL_outfile, lineSCBL);
-	string gradmSCBL_outfile = filepath + "\\" + infilename + "_13.1_SCBLM.png";			//對稱端點連通(幅值)
-	imwrite(gradmSCBL_outfile, gradmSCBL_out);
-	string graddSCBL_outfile = filepath + "\\" + infilename + "_13.2_SCBLD.png";			//對稱端點連通(方向)
-	imwrite(graddSCBL_outfile, graddSCBL_out);
-	string gradfSCBL_outfile = filepath + "\\" + infilename + "_12.3_SCBLF.png";			//對稱端點連通(場)
-	imwrite(gradfSCBL_outfile, gradfSCBL_out);
+	string LSCL_outfile = filepath + "\\" + infilename + "_12.0_SCL.png";				//對稱端點連通(二值)
+	imwrite(LSCL_outfile, lineSCL);
+	string gradmSCL_outfile = filepath + "\\" + infilename + "_12.1_SCLM.png";			//對稱端點連通(幅值)
+	imwrite(gradmSCL_outfile, gradmSCL_out);
+	string graddSCL_outfile = filepath + "\\" + infilename + "_12.2_SCLD.png";			//對稱端點連通(方向)
+	imwrite(graddSCL_outfile, graddSCL_out);
+	string gradfSCL_outfile = filepath + "\\" + infilename + "_12.3_SCLF.png";			//對稱端點連通(場)
+	imwrite(gradfSCL_outfile, gradfSCL_out);
 
 	/*去除孤立點*/
 
-	Mat lineCIP;	//去除孤立點(8UC1(BW))
-	ClearSpecialPoint(lineSCBL, lineCIP, 0, 1, 0);
-	string LCIP_outfile = filepath + "\\" + infilename + "_14_CIP.png";			//去除孤立點
-	imwrite(LCIP_outfile, lineCIP);
+	Mat lineCP;	//去除孤立點(8UC1(BW))
+	ClearPoint(lineSCL, lineCP, 0, 1, 0);
+	string LCP_outfile = filepath + "\\" + infilename + "_13_CP.png";			//去除孤立點
+	imwrite(LCP_outfile, lineCP);
 
 	/*強制端點連通*/
 
-	Mat gradmACBL, graddACBL, lineACBL;			//短對稱端點連通(8UC1、32FC1、8UC1(BW))
-	BWConnectBreakLine(gradmSCBL, graddSCBL, lineCIP, gradmACBL, graddACBL, lineACBL, 2, 5, 90, 1, 1);
+	Mat gradmACL, graddACL, lineACL;			//短對稱端點連通(8UC1、32FC1、8UC1(BW))
+	BWConnectLine(gradmSCL, graddSCL, lineCP, gradmACL, graddACL, lineACL, 2, 5, 90, 1, 1);
 
-	Mat gradmACBL_out, graddACBL_out, gradfACBL_out;		//輸出用(8UC1、8UC3、8UC3)
-	DrawAbsGraySystem(gradmACBL, gradmACBL_out);
-	DrawColorSystem(graddACBL, graddACBL_out);
-	DrawColorSystem(gradmACBL, graddACBL, gradfACBL_out);
+	Mat gradmACL_out, graddACL_out, gradfACL_out;		//輸出用(8UC1、8UC3、8UC3)
+	DrawAbsGraySystem(gradmACL, gradmACL_out);
+	DrawColorSystem(graddACL, graddACL_out);
+	DrawColorSystem(gradmACL, graddACL, gradfACL_out);
 
-	string LACBL_outfile = filepath + "\\" + infilename + "_15.0_ACBL.png";				//強制端點連通(二值)
-	imwrite(LACBL_outfile, lineACBL);
-	string gradmACBL_outfile = filepath + "\\" + infilename + "_15.1_ACBLM.png";			//強制端點連通(幅值)
-	imwrite(gradmACBL_outfile, gradmACBL_out);
-	string graddACBL_outfile = filepath + "\\" + infilename + "_15.2_ACBLD.png";			//強制端點連通(方向)
-	imwrite(graddACBL_outfile, graddACBL_out);
-	string gradfACBL_outfile = filepath + "\\" + infilename + "_15.3_ACBLF.png";			//強制端點連通(場)
-	imwrite(gradfACBL_outfile, gradfACBL_out);
+	string LACL_outfile = filepath + "\\" + infilename + "_14.0_ACL.png";				//強制端點連通(二值)
+	imwrite(LACL_outfile, lineACL);
+	string gradmACL_outfile = filepath + "\\" + infilename + "_14.1_ACLM.png";			//強制端點連通(幅值)
+	imwrite(gradmACL_outfile, gradmACL_out);
+	string graddACL_outfile = filepath + "\\" + infilename + "_14.2_ACLD.png";			//強制端點連通(方向)
+	imwrite(graddACL_outfile, graddACL_out);
+	string gradfACL_outfile = filepath + "\\" + infilename + "_14.3_ACLF.png";			//強制端點連通(場)
+	imwrite(gradfACL_outfile, gradfACL_out);
 
 	/*去除雜線*/
 
 	Mat lineCNL;	//去除雜線(8UC1(BW))
 	//ClearSpecialPoint(lineACBL, lineCNL, blurLineSize, 5, 1);
-	ClearNoise(lineACBL, lineCNL, 20, 8, 1);
-	string LCNL_outfile = filepath + "\\" + infilename + "_16_CNL.png";			//去除雜線
+	ClearNoise(lineACL, lineCNL, 30, 8, 1);
+	string LCNL_outfile = filepath + "\\" + infilename + "_15_CNL.png";			//去除雜線
 	imwrite(LCNL_outfile, lineCNL);
+
+	/****結合面與線的萃取結果****/
 
 	///*分水嶺演算法切割*/
 

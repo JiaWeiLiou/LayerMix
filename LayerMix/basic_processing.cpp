@@ -1077,7 +1077,7 @@ void ClearDifferentDirection(InputArray _gradm, InputArray _gradd, OutputArray _
 }
 
 /*梯度場斷線連通*/
-void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCBL, OutputArray _graddCBL, int startSpace, int endSpace, int degree, int flagT, bool flagD)
+void ConnectLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCL, OutputArray _graddCL, int startSpace, int endSpace, int degree, int flagT, bool flagD)
 {
 	Mat gradm = _gradm.getMat();
 	CV_Assert(gradm.type() == CV_8UC1);
@@ -1085,16 +1085,16 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 	Mat gradd = _gradd.getMat();
 	CV_Assert(gradd.type() == CV_32FC1);
 
-	_gradmCBL.create(gradm.size(), CV_8UC1);
-	Mat gradmCBL = _gradmCBL.getMat();
+	_gradmCL.create(gradm.size(), CV_8UC1);
+	Mat gradmCL = _gradmCL.getMat();
 
-	_graddCBL.create(gradd.size(), CV_32FC1);
-	Mat graddCBL = _graddCBL.getMat();
+	_graddCL.create(gradd.size(), CV_32FC1);
+	Mat graddCL = _graddCL.getMat();
 
 	if (flagT != 0 && flagT != 1) { flagT = 0; }
 
-	gradm.copyTo(gradmCBL);
-	gradd.copyTo(graddCBL);
+	gradm.copyTo(gradmCL);
+	gradd.copyTo(graddCL);
 
 	Mat endPointMap;	//點的種類
 	pointlabel(gradm, endPointMap);
@@ -1621,8 +1621,8 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 							int ic = (i - ik == 0) ? i : round((double)(jc - b) / a);		//防止數值Inf
 							endPointMap.at<Vec2b>(ic, jc)[0] = 3;
 							endPointMap.at<Vec2b>(ic, jc)[1] = 0;
-							gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + gradm.at<uchar>(ik, jk)*step / x;
-							graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(gradd.at<float>(ik, jk))*step, cos(gradd.at<float>(i, j))*(x - step) + cos(gradd.at<float>(ik, jk))*step);
+							gradmCL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + gradm.at<uchar>(ik, jk)*step / x;
+							graddCL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(gradd.at<float>(ik, jk))*step, cos(gradd.at<float>(i, j))*(x - step) + cos(gradd.at<float>(ik, jk))*step);
 						}
 					}
 					else if (searchLocation == 2 && mintheta <= degree)		//4區域連通 - 2區(N區)
@@ -1636,8 +1636,8 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 							int jc = round((double)ic * a + b);
 							endPointMap.at<Vec2b>(ic, jc)[0] = 3;
 							endPointMap.at<Vec2b>(ic, jc)[1] = 0;
-							gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + gradm.at<uchar>(ik, jk)*step / x;
-							graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(gradd.at<float>(ik, jk))*step, cos(gradd.at<float>(i, j))*(x - step) + cos(gradd.at<float>(ik, jk))*step);
+							gradmCL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + gradm.at<uchar>(ik, jk)*step / x;
+							graddCL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(gradd.at<float>(ik, jk))*step, cos(gradd.at<float>(i, j))*(x - step) + cos(gradd.at<float>(ik, jk))*step);
 						}
 					}
 					else if (searchLocation == 3 && mintheta <= degree)		//4區域連通 - 3區(E區)
@@ -1651,8 +1651,8 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 							int ic = (i - ik == 0) ? i : round((double)(jc - b) / a);		//防止數值Inf
 							endPointMap.at<Vec2b>(ic, jc)[0] = 3;
 							endPointMap.at<Vec2b>(ic, jc)[1] = 0;
-							gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + gradm.at<uchar>(ik, jk)*step / x;
-							graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(gradd.at<float>(ik, jk))*step, cos(gradd.at<float>(i, j))*(x - step) + cos(gradd.at<float>(ik, jk))*step);
+							gradmCL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + gradm.at<uchar>(ik, jk)*step / x;
+							graddCL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(gradd.at<float>(ik, jk))*step, cos(gradd.at<float>(i, j))*(x - step) + cos(gradd.at<float>(ik, jk))*step);
 						}
 					}
 					else if (searchLocation == 4 && mintheta <= degree)		//4區域連通 - 4區(S區)
@@ -1666,8 +1666,8 @@ void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCB
 							int jc = round((double)ic * a + b);
 							endPointMap.at<Vec2b>(ic, jc)[0] = 3;
 							endPointMap.at<Vec2b>(ic, jc)[1] = 0;
-							gradmCBL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + gradm.at<uchar>(ik, jk)*step / x;
-							graddCBL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(gradd.at<float>(ik, jk))*step, cos(gradd.at<float>(i, j))*(x - step) + cos(gradd.at<float>(ik, jk))*step);
+							gradmCL.at<uchar>(ic, jc) = (float)gradm.at<uchar>(i, j)*(x - step) / x + gradm.at<uchar>(ik, jk)*step / x;
+							graddCL.at<float>(ic, jc) = atan2(sin(gradd.at<float>(i, j))*(x - step) + sin(gradd.at<float>(ik, jk))*step, cos(gradd.at<float>(i, j))*(x - step) + cos(gradd.at<float>(ik, jk))*step);
 						}
 					}
 				}
@@ -1769,15 +1769,15 @@ void HysteresisThreshold(InputArray _gradm, OutputArray _bwLine, int upperThresh
 }
 
 /*清除特定點*/
-void ClearSpecialPoint(InputArray _bwLine, OutputArray _bwLineCSP, int border, int iter, bool flagT)
+void ClearPoint(InputArray _bwLine, OutputArray _bwLineCP, int border, int iter, bool flagT)
 {
 	Mat bwLine = _bwLine.getMat();
 	CV_Assert(bwLine.type() == CV_8UC1);
 
-	_bwLineCSP.create(bwLine.size(), CV_8UC1);
-	Mat bwLineCSP = _bwLineCSP.getMat();
+	_bwLineCP.create(bwLine.size(), CV_8UC1);
+	Mat bwLineCP = _bwLineCP.getMat();
 
-	bwLine.copyTo(bwLineCSP);
+	bwLine.copyTo(bwLineCP);
 
 	int type;
 	if (!flagT) { type = 1; }		//Isolated Point
@@ -1788,13 +1788,13 @@ void ClearSpecialPoint(InputArray _bwLine, OutputArray _bwLineCSP, int border, i
 	for (int step = 1; step <= iter && stopflag; ++step)
 	{
 		Mat pointMap;	//點的種類
-		pointlabel(bwLineCSP, pointMap);
+		pointlabel(bwLineCP, pointMap);
 		int exenums = 0;
 		for (int i = border; i < pointMap.rows - border; ++i)
 			for (int j = border; j < pointMap.cols - border; ++j)
 				if (pointMap.at<Vec2b>(i, j)[0] == 1 || pointMap.at<Vec2b>(i, j)[0] == type)
 				{
-					bwLineCSP.at<uchar>(i, j) = 0;
+					bwLineCP.at<uchar>(i, j) = 0;
 					++exenums;
 				}
 		if (exenums == 0) { stopflag = 0; }
@@ -1802,7 +1802,7 @@ void ClearSpecialPoint(InputArray _bwLine, OutputArray _bwLineCSP, int border, i
 }
 
 /*二值圖斷線連通*/
-void BWConnectBreakLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine, OutputArray _gradmCBL, OutputArray _graddCBL, OutputArray _bwLineCBL, int startSpace, int endSpace, int degree, int flagT, bool flagD)
+void BWConnectLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine, OutputArray _gradmCL, OutputArray _graddCL, OutputArray _bwLineCL, int startSpace, int endSpace, int degree, int flagT, bool flagD)
 {
 	Mat gradm = _gradm.getMat();
 	CV_Assert(gradm.type() == CV_8UC1);
@@ -1813,14 +1813,14 @@ void BWConnectBreakLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine
 	Mat bwLine = _bwLine.getMat();
 	CV_Assert(bwLine.type() == CV_8UC1);
 
-	_gradmCBL.create(gradm.size(), CV_8UC1);
-	Mat gradmCBL = _gradmCBL.getMat();
+	_gradmCL.create(gradm.size(), CV_8UC1);
+	Mat gradmCL = _gradmCL.getMat();
 
-	_graddCBL.create(gradd.size(), CV_32FC1);
-	Mat graddCBL = _graddCBL.getMat();
+	_graddCL.create(gradd.size(), CV_32FC1);
+	Mat graddCL = _graddCL.getMat();
 
-	_bwLineCBL.create(bwLine.size(), CV_8UC1);
-	Mat bwLineCBL = _bwLineCBL.getMat();
+	_bwLineCL.create(bwLine.size(), CV_8UC1);
+	Mat bwLineCL = _bwLineCL.getMat();
 
 	if (flagT != 0 && flagT != 1) { flagT = 0; }
 
@@ -1842,12 +1842,12 @@ void BWConnectBreakLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine
 			}
 		}
 
-	ConnectBreakLine(gradmRef, graddRef, gradmCBL, graddCBL, startSpace, endSpace, degree, flagT, flagD);
+	ConnectLine(gradmRef, graddRef, gradmCL, graddCL, startSpace, endSpace, degree, flagT, flagD);
 
-	for (int i = 0; i < graddCBL.rows; ++i)
-		for (int j = 0; j < graddCBL.cols; ++j)
+	for (int i = 0; i < graddCL.rows; ++i)
+		for (int j = 0; j < graddCL.cols; ++j)
 		{
-			if (graddCBL.at<float>(i, j) != -1000.0f) { bwLineCBL.at<uchar>(i, j) = 255; }
-			else { bwLineCBL.at<uchar>(i, j) = 0; }
+			if (graddCL.at<float>(i, j) != -1000.0f) { bwLineCL.at<uchar>(i, j) = 255; }
+			else { bwLineCL.at<uchar>(i, j) = 0; }
 		}
 }

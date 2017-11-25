@@ -89,7 +89,7 @@ void ClearDifferentDirection(InputArray _gradm, InputArray _gradd, OutputArray _
 // flagT = 1  -> 可搜尋端點、線段點、分岔點
 // flagD = 0  -> 只搜尋90度範圍
 // flagD = 1  -> 可搜尋180度範圍
-void ConnectBreakLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCBL, OutputArray _graddCBL, int startSpace = 2, int endSpace = 5, int degree = 60, int flagT = 0, bool flagD = 0);
+void ConnectLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCL, OutputArray _graddCL, int startSpace = 2, int endSpace = 5, int degree = 60, int flagT = 0, bool flagD = 0);
 
 /*滯後閥值*/
 void HysteresisThreshold(InputArray _gradm, OutputArray _bwLine, int upperThreshold = 150, int lowerThreshold = 50);
@@ -98,7 +98,7 @@ void HysteresisThreshold(InputArray _gradm, OutputArray _bwLine, int upperThresh
 //  iter -- 刪除次數
 //  flagT = 0 -> 清除孤立點
 //  flagT = 1 -> 清除端點
-void ClearSpecialPoint(InputArray _bwLine, OutputArray _bwLineCSP, int border = 0, int iter = 1, bool flagT = 0);
+void ClearPoint(InputArray _bwLine, OutputArray _bwLineCP, int border = 0, int iter = 1, bool flagT = 0);
 
 /*二值斷線連通*/
 // startSpace -> 起始搜尋的間距
@@ -108,4 +108,4 @@ void ClearSpecialPoint(InputArray _bwLine, OutputArray _bwLineCSP, int border = 
 // flagT = 1  -> 可搜尋端點、線段點、分岔點
 // flagD = 0  -> 只搜尋90度範圍
 // flagD = 1  -> 可搜尋180度範圍
-void BWConnectBreakLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine, OutputArray _gradmCBL, OutputArray _graddCBL, OutputArray _bwLineCBL, int startSpace, int endSpace, int degree, int flagT, bool flagD);
+void BWConnectLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine, OutputArray _gradmCL, OutputArray _graddCL, OutputArray _bwLineCL, int startSpace, int endSpace, int degree, int flagT, bool flagD);
