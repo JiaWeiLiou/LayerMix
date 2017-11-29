@@ -1040,7 +1040,7 @@ void HysteresisCut(InputArray _gradm, InputArray _gradd, InputArray _bwImage, Ou
 				MT.at<uchar>(i, j) = 255;
 
 	Mat labelImg;
-	int labelNum = bwlabel(MT, labelImg, 4);
+	int labelNum = bwlabel(MT, labelImg, 8);
 	labelNum = labelNum + 1;	// include label 0
 	int* labeltable = new int[labelNum];		// initialize label table with zero  
 	memset(labeltable, 0, labelNum * sizeof(int));
@@ -1056,16 +1056,37 @@ void HysteresisCut(InputArray _gradm, InputArray _gradd, InputArray _bwImage, Ou
 			//| G | H | I |
 			//+ - + - + - +
 
-			int C, E;
+			int B, C, D, E, F, G, H, I;
+
+			if (i == 0 || j == 0) { B = 0; }
+			else { B = UT.at<uchar>(i - 1, j - 1); }
 
 			if (i == 0) { C = 0; }
 			else { C = UT.at<uchar>(i - 1, j); }
 
+			if (i == 0 || j == gradm.cols - 1) { D = 0; }
+			else { D = UT.at<uchar>(i - 1, j + 1); }
+
 			if (j == 0) { E = 0; }
 			else { E = UT.at<uchar>(i, j - 1); }
 
+			if (j == gradm.cols - 1) { F = 0; }
+			else { F = UT.at<uchar>(i, j + 1); }
+
+			if (i == gradm.rows - 1 || j == 0) { G = 0; }
+			else { G = UT.at<uchar>(i + 1, j - 1); }
+
+			if (i == gradm.rows - 1) { H = 0; }
+			else { H = UT.at<uchar>(i + 1, j); }
+
+			if (i == gradm.rows - 1 || j == gradm.cols - 1) { I = 0; }
+			else { I = UT.at<uchar>(i + 1, j + 1); }
+
 			// apply 8 connectedness  
-			if (C || E) { ++labeltable[labelImg.at<int>(i, j)]; }
+			if (B || C || D || E || F || G || H || I)
+			{
+				++labeltable[labelImg.at<int>(i, j)];
+			}
 		}
 
 	labeltable[0] = 0;		//clear 0 label
