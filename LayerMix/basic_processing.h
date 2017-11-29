@@ -123,3 +123,6 @@ void BWConnectLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine, Out
 // flag = 0  -> 物體為白色
 // flag = 1  -> 背景為白色
 void BWCombine(InputArray _bwArea, InputArray _bwLine, OutputArray _edge, bool flag = 1);
+
+/*反轉二值圖*/
+void BWCombine(InputArray _bwImage, OutputArray _bwImageR);

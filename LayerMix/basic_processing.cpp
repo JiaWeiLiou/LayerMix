@@ -2032,3 +2032,18 @@ void BWCombine(InputArray _bwArea, InputArray _bwLine, OutputArray _edge, bool f
 			if (bwArea.at<uchar>(i, j) == 0 || bwLine.at<uchar>(i, j) == 255) { edge.at<uchar>(i, j) = value0; }
 			else { edge.at<uchar>(i, j) = value1; }
 }
+
+/*反轉二值圖*/
+void BWCombine(InputArray _bwImage, OutputArray _bwImageR)
+{
+	Mat bwImage = _bwImage.getMat();
+	CV_Assert(bwImage.type() == CV_8UC1);
+
+	_bwImageR.create(bwImage.size(), CV_8UC1);
+	Mat bwImageR = _bwImageR.getMat();
+
+	for (int i = 0; i < bwImage.rows; ++i)
+		for (int j = 0; j < bwImage.cols; ++j)
+			if (bwImage.at<uchar>(i, j) == 0) { bwImageR.at<uchar>(i, j) = 255; }
+			else { bwImage.at<uchar>(i, j) = 0; }
+}
