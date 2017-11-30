@@ -104,10 +104,7 @@ void ConnectLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCL, Out
 void HysteresisThreshold(InputArray _gradm, OutputArray _bwLine, int upperThreshold = 150, int lowerThreshold = 50);
 
 /*清除特定點*/
-//  iter -- 刪除次數
-//  flagT = 0 -> 清除孤立點
-//  flagT = 1 -> 清除端點
-void ClearPoint(InputArray _bwLine, OutputArray _bwLineCP, int border = 0, int iter = 1, bool flagT = 0);
+void ClearPoint(InputArray _gradm, InputArray _gradd, OutputArray _gradmCP, OutputArray _graddCP);
 
 /*二值斷線連通*/
 // startSpace -> 起始搜尋的間距
