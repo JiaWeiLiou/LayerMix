@@ -1945,35 +1945,36 @@ void HysteresisThreshold(InputArray _gradm, OutputArray _bwLine, int upperThresh
 }
 
 /*清除特定點*/
-void ClearPoint(InputArray _gradm, InputArray _gradd, OutputArray _gradmCP, OutputArray _graddCP)
+void ClearPoint(InputArray _bwLine, OutputArray _bwLineCP, int border, int iter, bool flagT)
 {
-	Mat gradm = _gradm.getMat();
-	CV_Assert(gradm.type() == CV_8UC1);
+	Mat bwLine = _bwLine.getMat();
+	CV_Assert(bwLine.type() == CV_8UC1);
 
-	Mat gradd = _gradd.getMat();
-	CV_Assert(gradd.type() == CV_32FC1);
+	_bwLineCP.create(bwLine.size(), CV_8UC1);
+	Mat bwLineCP = _bwLineCP.getMat();
 
-	_gradmCP.create(gradm.size(), CV_8UC1);
-	Mat gradmCP = _gradmCP.getMat();
+	bwLine.copyTo(bwLineCP);
 
-	_graddCP.create(gradd.size(), CV_32FC1);
-	Mat graddCP = _graddCP.getMat();
+	int type;
+	if (!flagT) { type = 1; }		//Isolated Point
+	else { type = 2; }				//EndPoint 
 
-	Mat pointMap;	//點的種類
-	pointlabel(gradm, pointMap);
+	bool stopflag = 1;
 
-	for (int i = 0; i < pointMap.rows; ++i)
-		for (int j = 0; j < pointMap.cols; ++j)
-			if (pointMap.at<Vec2b>(i, j)[0] == 1)
-			{
-				gradmCP.at<uchar>(i, j) = 0;
-				graddCP.at<float>(i, j) = -1000.0f;
-			}
-			else
-			{
-				gradmCP.at<uchar>(i, j) = gradm.at<uchar>(i, j);
-				graddCP.at<float>(i, j) = gradd.at<float>(i, j);
-			}
+	for (int step = 1; step <= iter && stopflag; ++step)
+	{
+		Mat pointMap;	//點的種類
+		pointlabel(bwLineCP, pointMap);
+		int exenums = 0;
+		for (int i = border; i < pointMap.rows - border; ++i)
+			for (int j = border; j < pointMap.cols - border; ++j)
+				if (pointMap.at<Vec2b>(i, j)[0] == 1 || pointMap.at<Vec2b>(i, j)[0] == type)
+				{
+					bwLineCP.at<uchar>(i, j) = 0;
+					++exenums;
+				}
+		if (exenums == 0) { stopflag = 0; }
+	}
 }
 
 /*二值圖斷線連通*/
