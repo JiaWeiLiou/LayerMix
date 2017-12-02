@@ -316,7 +316,7 @@ void DrawColorBar(InputArray _grayImage, OutputArray _colorbarImage, int upperbo
 		{
 			uchar *data = colorbarImage.data + colorbarImage.step[0] * i + colorbarImage.step[1] * j;
 
-			float fk = (1- (float)grayImage.at<uchar>(i, j) / (float)maxrad) * (colorbar.size() - 1);  //計算灰度值對應之索引位置
+			float fk = (1 - (float)grayImage.at<uchar>(i, j) / (float)maxrad) * (colorbar.size() - 1);  //計算灰度值對應之索引位置
 			int k0 = floor(fk);
 			int k1 = ceil(fk);
 			float f = fk - k0;
@@ -599,8 +599,8 @@ void DrawLabel(InputArray _bwImage, OutputArray _combineLabel)
 	Mat object(bwImage.size(), CV_8UC1);
 	for (int i = 0; i < bwImage.rows; i++)
 		for (int j = 0; j < bwImage.cols; j++)
-			if (bwImage.at<uchar>(i, j) == 255) { object.at<uchar>(i, j) = 0; }
-			else { object.at<uchar>(i, j) = 255; }
+			if (bwImage.at<uchar>(i, j) == 255) { object.at<uchar>(i, j) = 255; }
+			else { object.at<uchar>(i, j) = 0; }
 
 			Mat labels;
 			int objectNum = bwlabel(object, labels, 4);
@@ -636,7 +636,7 @@ void DrawEdge(InputArray _bwImage, InputArray _realImage, OutputArray _combineIm
 		for (int i = 0; i < bwImage.rows; i++)
 			for (int j = 0; j < bwImage.cols; j++)
 			{
-				if (bwImage.at<uchar>(i, j) == 255)
+				if (bwImage.at<uchar>(i, j) == 0)
 				{
 					combineImage.at<Vec3b>(i, j)[0] = 255;
 					combineImage.at<Vec3b>(i, j)[1] = 0;
@@ -658,7 +658,7 @@ void DrawEdge(InputArray _bwImage, InputArray _realImage, OutputArray _combineIm
 		for (int i = 0; i < bwImage.rows; i++)
 			for (int j = 0; j < bwImage.cols; j++)
 			{
-				if (bwImage.at<uchar>(i, j) == 255)
+				if (bwImage.at<uchar>(i, j) == 0)
 				{
 					combineImage.at<Vec3b>(i, j)[0] = 255;
 					combineImage.at<Vec3b>(i, j)[1] = 0;
@@ -1204,8 +1204,86 @@ void NonMaximumSuppression(InputArray _gradm, InputArray _gradd, OutputArray _gr
 		}
 }
 
+/*清除分岔點點*/
+void ClearBifPoint(InputArray _gradm, InputArray _gradd, OutputArray _gradmCBP, OutputArray _graddCBP)
+{
+	Mat gradm = _gradm.getMat();
+	CV_Assert(gradm.type() == CV_8UC1);
+
+	Mat gradd = _gradd.getMat();
+	CV_Assert(gradd.type() == CV_32FC1);
+
+	_gradmCBP.create(gradm.size(), CV_8UC1);
+	Mat gradmCBP = _gradmCBP.getMat();
+
+	_graddCBP.create(gradd.size(), CV_32FC1);
+	Mat graddCBP = _graddCBP.getMat();
+
+	gradm.copyTo(gradmCBP);
+	gradd.copyTo(graddCBP);
+
+	Mat gradmRef;
+	copyMakeBorder(gradm, gradmRef, 1, 1, 1, 1, BORDER_CONSTANT, Scalar(0));
+
+	Mat mask(gradmCBP.rows + 2, gradmCBP.cols + 2, CV_8UC1, Scalar(1));
+
+	for (int i = 1; i <= gradm.rows; ++i)
+		for (int j = 1; j <= gradm.cols; ++j)
+		{
+			vector<char> nearPoint;
+			int num = 0;
+
+			if (gradmCBP.at<uchar>(i - 1, j - 1) != 0 && mask.at<uchar>(i, j) != 0)
+			{
+				nearPoint.push_back(gradmRef.at<uchar>(i, j - 1));			//1
+				nearPoint.push_back(gradmRef.at<uchar>(i - 1, j - 1));				//2
+				nearPoint.push_back(gradmRef.at<uchar>(i - 1, j));			//3
+				nearPoint.push_back(gradmRef.at<uchar>(i - 1, j + 1));			//4
+				nearPoint.push_back(gradmRef.at<uchar>(i, j + 1));		//5
+				nearPoint.push_back(gradmRef.at<uchar>(i + 1, j + 1));		//6
+				nearPoint.push_back(gradmRef.at<uchar>(i + 1, j));		//7
+				nearPoint.push_back(gradmRef.at<uchar>(i + 1, j - 1));			//8
+				num = 8 - count(nearPoint.begin(), nearPoint.end(), 0);
+
+				bool flag = 0;
+				if (num == 3 || num == 4)
+				{
+					int realnum = 0;
+					if (gradmRef.at<uchar>(i, j - 1) != 0 && gradmRef.at<uchar>(i - 1, j - 1) != 0) { ++realnum; }
+					if (gradmRef.at<uchar>(i - 1, j - 1) != 0 && gradmRef.at<uchar>(i - 1, j) != 0) { ++realnum; }
+					if (gradmRef.at<uchar>(i - 1, j) != 0 && gradmRef.at<uchar>(i - 1, j + 1) != 0) { ++realnum; }
+					if (gradmRef.at<uchar>(i - 1, j + 1) != 0 && gradmRef.at<uchar>(i, j + 1) != 0) { ++realnum; }
+					if (gradmRef.at<uchar>(i, j + 1) != 0 && gradmRef.at<uchar>(i + 1, j + 1) != 0) { ++realnum; }
+					if (gradmRef.at<uchar>(i + 1, j + 1) != 0 && gradmRef.at<uchar>(i + 1, j) != 0) { ++realnum; }
+					if (gradmRef.at<uchar>(i + 1, j) != 0 && gradmRef.at<uchar>(i + 1, j - 1) != 0) { ++realnum; }
+					if (gradmRef.at<uchar>(i + 1, j - 1) != 0 && gradmRef.at<uchar>(i, j - 1) != 0) { ++realnum; }
+					if ((num == 3 && realnum == 1) || (num == 4 && realnum == 2)){ flag = 1; }
+				}
+
+				if (num != 0 && num != 1 && num != 2 && !flag)	//Bifurcation point
+				{
+					mask.at<uchar>(i, j) = mask.at<uchar>(i, j - 1) = mask.at<uchar>(i - 1, j - 1) = mask.at<uchar>(i - 1, j) = mask.at<uchar>(i - 1, j + 1) = 0;
+					mask.at<uchar>(i, j + 1) = mask.at<uchar>(i + 1, j + 1) = mask.at<uchar>(i + 1, j) = mask.at<uchar>(i + 1, j - 1) = 0;
+				}
+			}
+		}
+
+	for (int i = 0; i < gradmCBP.rows; ++i)
+		for (int j = 0; j < gradmCBP.cols; ++j)
+			if (!mask.at<uchar>(i + 1, j + 1))
+			{
+				gradmCBP.at<uchar>(i, j) = 0;
+				graddCBP.at<float>(i, j) = -1000.0f;
+			}
+			else
+			{
+				gradmCBP.at<uchar>(i, j) = gradm.at<uchar>(i, j);
+				graddCBP.at<float>(i, j) = gradd.at<float>(i, j);
+			}
+}
+
 /*清除異方向點*/
-void ClearDifferentDirection(InputArray _gradm, InputArray _gradd, OutputArray _gradmCDD, OutputArray _graddCDD)
+void ClearDifferentDirection(InputArray _gradm, InputArray _gradd, OutputArray _gradmCDD, OutputArray _graddCDD, bool flag)
 {
 	Mat gradm = _gradm.getMat();
 	CV_Assert(gradm.type() == CV_8UC1);
@@ -1219,37 +1297,110 @@ void ClearDifferentDirection(InputArray _gradm, InputArray _gradd, OutputArray _
 	_graddCDD.create(gradd.size(), CV_32FC1);
 	Mat graddCDD = _graddCDD.getMat();
 
-	Mat mask(gradm.rows + 2, gradm.cols + 2, CV_8UC1, Scalar(255));
+	gradm.copyTo(gradmCDD);
+	gradd.copyTo(graddCDD);
 
 	float theta = 0.0f;			//目前像素的方向
 
-	for (int i = 0; i < gradm.rows; ++i)
-		for (int j = 0; j < gradm.cols; ++j)
-		{
-			theta = ((gradd.at<float>(i, j) + CV_PI) / CV_PI)*180.0f;
+	Mat mask(gradmCDD.rows + 2, gradmCDD.cols + 2, CV_8UC1, Scalar(1));
 
-			if ((theta <= 360.0f && theta >= 337.5f) || (theta < 22.5f &&  theta >= 0.0f) || (theta >= 157.5f && theta < 202.5f))
-				mask.at<uchar>(i + 1, j) = mask.at<uchar>(i + 1, j + 2) = 0;
-			else if ((theta >= 22.5f && theta < 67.5f) || (theta >= 202.5f && theta < 247.5f))
-				mask.at<uchar>(i, j) = mask.at<uchar>(i + 2, j + 2) = 0;
-			else if ((theta >= 67.5f && theta < 112.5f) || (theta >= 247.5f && theta < 292.5f))
-				mask.at<uchar>(i, j + 1) = mask.at<uchar>(i + 2, j + 1) = 0;
-			else if ((theta >= 112.5f && theta < 157.5f) || (theta >= 292.5f && theta < 337.5f))
-				mask.at<uchar>(i, j + 2) = mask.at<uchar>(i + 2, j) = 0;
-		}
-
-	for (int i = 0; i < gradm.rows; ++i)
-		for (int j = 0; j < gradm.cols; ++j)
-			if (mask.at<uchar>(i + 1, j + 1) == 255)
+	for (int i = 1; i <= gradmCDD.rows; ++i)
+		for (int j = 1; j <= gradmCDD.cols; ++j)
+			if (gradmCDD.at<uchar>(i - 1, j - 1) != 0 && mask.at<uchar>(i, j) != 0)
 			{
-				gradmCDD.at<uchar>(i, j) = gradm.at<uchar>(i, j);
-				graddCDD.at<float>(i, j) = gradd.at<float>(i, j);
+				float theta = ((gradd.at<float>(i - 1, j - 1) + CV_PI) / CV_PI)*180.0f;
+
+				if (!flag)
+				{
+					if ((theta >= 22.5f && theta < 67.5f) || (theta >= 202.5f && theta < 247.5f))
+						mask.at<uchar>(i - 1, j - 1) = mask.at<uchar>(i + 1, j + 1) = 0;
+					else if ((theta >= 67.5f && theta < 112.5f) || (theta >= 247.5f && theta < 292.5f))
+						mask.at<uchar>(i - 1, j) = mask.at<uchar>(i + 1, j) = 0;
+					else if ((theta >= 112.5f && theta < 157.5f) || (theta >= 292.5f && theta < 337.5f))
+						mask.at<uchar>(i - 1, j + 1) = mask.at<uchar>(i + 1, j - 1) = 0;
+					else
+						mask.at<uchar>(i, j - 1) = mask.at<uchar>(i, j + 1) = 0;
+				}
+				else
+				{
+					if ((theta >= 22.5f && theta < 67.5f) || (theta >= 202.5f && theta < 247.5f))
+						mask.at<uchar>(i - 1, j - 1) = mask.at<uchar>(i + 1, j + 1) = mask.at<uchar>(i - 1, j) = mask.at<uchar>(i + 1, j) = 0;
+					else if ((theta >= 67.5f && theta < 112.5f) || (theta >= 247.5f && theta < 292.5f))
+						mask.at<uchar>(i - 1, j) = mask.at<uchar>(i + 1, j) = mask.at<uchar>(i - 1, j + 1) = mask.at<uchar>(i + 1, j - 1) = 0;
+					else if ((theta >= 112.5f && theta < 157.5f) || (theta >= 292.5f && theta < 337.5f))
+						mask.at<uchar>(i - 1, j + 1) = mask.at<uchar>(i + 1, j - 1) = mask.at<uchar>(i, j + 1) = mask.at<uchar>(i, j - 1) = 0;
+					else
+						mask.at<uchar>(i, j - 1) = mask.at<uchar>(i, j + 1) = mask.at<uchar>(i, j - 1) = mask.at<uchar>(i, j + 1) = 0;
+				}
 			}
-			else
+
+	for (int i = 0; i < gradmCDD.rows; ++i)
+		for (int j = 0; j < gradmCDD.cols; ++j)
+			if (!mask.at<uchar>(i + 1, j + 1))
 			{
 				gradmCDD.at<uchar>(i, j) = 0;
 				graddCDD.at<float>(i, j) = -1000.0f;
 			}
+			else
+			{
+				gradmCDD.at<uchar>(i, j) = gradm.at<uchar>(i, j);
+				graddCDD.at<float>(i, j) = gradd.at<float>(i, j);
+			}
+}
+
+/*清除孤立點*/
+void ClearIsoPoint(InputArray _gradm, InputArray _gradd, OutputArray _gradmCIP, OutputArray _graddCIP)
+{
+	Mat gradm = _gradm.getMat();
+	CV_Assert(gradm.type() == CV_8UC1);
+
+	Mat gradd = _gradd.getMat();
+	CV_Assert(gradd.type() == CV_32FC1);
+
+	_gradmCIP.create(gradm.size(), CV_8UC1);
+	Mat gradmCIP = _gradmCIP.getMat();
+
+	_graddCIP.create(gradd.size(), CV_32FC1);
+	Mat graddCIP = _graddCIP.getMat();
+
+	Mat gradmRef;
+	copyMakeBorder(gradm, gradmRef, 1, 1, 1, 1, BORDER_CONSTANT, Scalar(0));
+
+	for (int i = 0; i < gradm.rows; ++i)
+		for (int j = 0; j < gradm.cols; ++j)
+		{
+			vector<char> nearPoint;
+			int num = 0;
+
+			if (gradmRef.at<uchar>(i + 1, j + 1) != 0)
+			{
+				nearPoint.push_back(gradmRef.at<uchar>(i + 1, j));			//1
+				nearPoint.push_back(gradmRef.at<uchar>(i, j));				//2
+				nearPoint.push_back(gradmRef.at<uchar>(i, j + 1));			//3
+				nearPoint.push_back(gradmRef.at<uchar>(i, j + 2));			//4
+				nearPoint.push_back(gradmRef.at<uchar>(i + 1, j + 2));		//5
+				nearPoint.push_back(gradmRef.at<uchar>(i + 2, j + 2));		//6
+				nearPoint.push_back(gradmRef.at<uchar>(i + 2, j + 1));		//7
+				nearPoint.push_back(gradmRef.at<uchar>(i + 2, j));			//8
+				num = 8 - count(nearPoint.begin(), nearPoint.end(), 0);
+
+				if (num == 0)		//Isolated Point
+				{
+					gradmCIP.at<uchar>(i, j) = 0;
+					graddCIP.at<float>(i, j) = -1000.0f;
+				}
+				else
+				{
+					gradmCIP.at<uchar>(i, j) = gradm.at<uchar>(i, j);
+					graddCIP.at<float>(i, j) = gradd.at<float>(i, j);
+				}
+			}
+			else
+			{
+				gradmCIP.at<uchar>(i, j) = 0;
+				graddCIP.at<float>(i, j) = -1000.0f;
+			}
+		}
 }
 
 /*梯度場斷線連通*/
@@ -1944,8 +2095,8 @@ void HysteresisThreshold(InputArray _gradm, OutputArray _bwLine, int upperThresh
 	labeltable = nullptr;
 }
 
-/*清除特定點*/
-void ClearPoint(InputArray _bwLine, OutputArray _bwLineCP, int border, int iter, bool flagT)
+/*清除孤立點*/
+void BWClearIsoPoint(InputArray _bwLine, OutputArray _bwLineCP, int border, int iter, bool flagT)
 {
 	Mat bwLine = _bwLine.getMat();
 	CV_Assert(bwLine.type() == CV_8UC1);

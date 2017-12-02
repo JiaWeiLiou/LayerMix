@@ -87,8 +87,16 @@ void HysteresisCut(InputArray _gradm, InputArray _gradd, InputArray _bwImage, Ou
 /*非極大值抑制*/
 void NonMaximumSuppression(InputArray _gradm, InputArray _gradd, OutputArray _gradmNMS, OutputArray _graddNMS);
 
+/*清除分岔點點*/
+void ClearBifPoint(InputArray _gradm, InputArray _gradd, OutputArray _gradmCBP, OutputArray _graddCBP);
+
 /*清除異方向點*/
-void ClearDifferentDirection(InputArray _gradm, InputArray _gradd, OutputArray _gradmCDD, OutputArray _graddCDD);
+// flagD = 0  -> 無預測方向
+// flagD = 1  -> 有預測方向
+void ClearDifferentDirection(InputArray _gradm, InputArray _gradd, OutputArray _gradmCDD, OutputArray _graddCDD, bool flag = 0);
+
+/*清除孤立點*/
+void ClearIsoPoint(InputArray _gradm, InputArray _gradd, OutputArray _gradmCIP, OutputArray _graddCIP);
 
 /*梯度場斷線連通*/
 // startSpace -> 起始搜尋的間距
@@ -103,11 +111,11 @@ void ConnectLine(InputArray _gradm, InputArray _gradd, OutputArray _gradmCL, Out
 /*滯後閥值*/
 void HysteresisThreshold(InputArray _gradm, OutputArray _bwLine, int upperThreshold = 150, int lowerThreshold = 50);
 
-/*清除特定點*/
+/*二值清除孤立點*/
 //  iter -- 刪除次數
 //  flagT = 0 -> 清除孤立點
 //  flagT = 1 -> 清除端點
-void ClearPoint(InputArray _bwLine, OutputArray _bwLineCP, int border = 0, int iter = 1, bool flagT = 0);
+void BWClearIsoPoint(InputArray _bwLine, OutputArray _bwLineCP, int border = 0, int iter = 1, bool flagT = 0);
 
 /*二值斷線連通*/
 // startSpace -> 起始搜尋的間距
@@ -122,7 +130,7 @@ void BWConnectLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine, Out
 /*結合線與面的二值邊緣*/
 // flag = 0  -> 物體為白色
 // flag = 1  -> 背景為白色
-void BWCombine(InputArray _bwArea, InputArray _bwLine, OutputArray _edge, bool flag = 1);
+void BWCombine(InputArray _bwArea, InputArray _bwLine, OutputArray _edge, bool flag = 0);
 
 /*反轉二值圖*/
 void BWCombine(InputArray _bwImage, OutputArray _bwImageR);
