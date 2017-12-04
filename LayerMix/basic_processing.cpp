@@ -1306,7 +1306,8 @@ void ClearDifferentDirection(InputArray _gradm, InputArray _gradd, OutputArray _
 
 	for (int i = 1; i <= gradmCDD.rows; ++i)
 		for (int j = 1; j <= gradmCDD.cols; ++j)
-			if (gradmCDD.at<uchar>(i - 1, j - 1) != 0 && mask.at<uchar>(i, j) != 0)
+			/*if (gradmCDD.at<uchar>(i - 1, j - 1) != 0 && mask.at<uchar>(i, j) != 0)*/
+			if (gradmCDD.at<uchar>(i - 1, j - 1) != 0)
 			{
 				float theta = ((gradd.at<float>(i - 1, j - 1) + CV_PI) / CV_PI)*180.0f;
 

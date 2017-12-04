@@ -88,13 +88,13 @@ int main()
 	/*去除影像雜訊*/
 
 	Mat clearWiteArea;		//去除白色雜訊(8UC1(BW))
-	ClearNoise(hardmixArea, clearWiteArea, 20, 4, 1);
+	ClearNoise(hardmixArea, clearWiteArea, 5, 4, 1);
 
 	string clearWA_outfile = filepath + "\\" + infilename + "_3.1_CLEARW.png";			//去除白色雜訊
 	imwrite(clearWA_outfile, clearWiteArea);
 
 	Mat clearBlackArea;		//去除黑色雜訊(8UC1(BW))
-	ClearNoise(clearWiteArea, clearBlackArea, 80, 4, 0);
+	ClearNoise(clearWiteArea, clearBlackArea, 5, 4, 0);
 
 	string clearBA_outfile = filepath + "\\" + infilename + "_3.2_CLEARB.png";			//去除黑色雜訊
 	imwrite(clearBA_outfile, clearBlackArea);
@@ -226,44 +226,44 @@ int main()
 	string gradfCDD_outfile = filepath + "\\" + infilename + "_10.3_CDDF.png";			//清除異方向點(場)
 	imwrite(gradfCDD_outfile, gradfCDD_out);
 
-	/*去除孤立點*/
-
-	Mat gradmCIP, graddCIP;			//去除孤立點(8UC1、32FC1)
-	ClearIsoPoint(gradmCDD, graddCDD, gradmCIP, graddCIP);
-
-	Mat gradmCIP_out, graddCIP_out, gradfCIP_out;		//輸出用(8UC1、8UC3、8UC3)
-	DrawAbsGraySystem(gradmCIP, gradmCIP_out);
-	DrawColorSystem(graddCIP, graddCIP_out);
-	DrawColorSystem(gradmCIP, graddCIP, gradfCIP_out);
-
-	string gradmCIP_outfile = filepath + "\\" + infilename + "_11.1_CIPM.png";			//去除孤立點(幅值)
-	imwrite(gradmCIP_outfile, gradmCIP_out);
-	string graddCIP_outfile = filepath + "\\" + infilename + "_11.2_CIPD.png";			//去除孤立點(方向)
-	imwrite(graddCIP_outfile, graddCIP_out);
-	string gradfCIP_outfile = filepath + "\\" + infilename + "_11.3_CIPF.png";			//去除孤立點(場)
-	imwrite(gradfCIP_outfile, gradfCIP_out);
-
 	/*滯後切割*/
 
 	Mat gradmHC, graddHC;		//滯後切割(8UC1、32FC1)
-	HysteresisCut(gradmCIP, graddCIP, clearBlackArea, gradmHC, graddHC);
+	HysteresisCut(gradmCDD, graddCDD, clearBlackArea, gradmHC, graddHC);
 
 	Mat gradmHC_out, graddHC_out, gradfHC_out;		//輸出用(8UC1、8UC3、8UC3)
 	DrawAbsGraySystem(gradmHC, gradmHC_out);
 	DrawColorSystem(graddHC, graddHC_out);
 	DrawColorSystem(gradmHC, graddHC, gradfHC_out);
 
-	string gradmHC_outfile = filepath + "\\" + infilename + "_12.1_HCM.png";				//滯後切割(幅值)
+	string gradmHC_outfile = filepath + "\\" + infilename + "_11.1_HCM.png";				//滯後切割(幅值)
 	imwrite(gradmHC_outfile, gradmHC_out);
-	string graddHC_outfile = filepath + "\\" + infilename + "_12.2_HCD.png";				//滯後切割(方向)
+	string graddHC_outfile = filepath + "\\" + infilename + "_11.2_HCD.png";				//滯後切割(方向)
 	imwrite(graddHC_outfile, graddHC_out);
-	string gradfHC_outfile = filepath + "\\" + infilename + "_12.3_HCF.png";				//滯後切割(場)
+	string gradfHC_outfile = filepath + "\\" + infilename + "_11.3_HCF.png";				//滯後切割(場)
 	imwrite(gradfHC_outfile, gradfHC_out);
+
+	/*去除孤立點*/
+
+	Mat gradmCIP, graddCIP;			//去除孤立點(8UC1、32FC1)
+	ClearIsoPoint(gradmHC, graddHC, gradmCIP, graddCIP);
+
+	Mat gradmCIP_out, graddCIP_out, gradfCIP_out;		//輸出用(8UC1、8UC3、8UC3)
+	DrawAbsGraySystem(gradmCIP, gradmCIP_out);
+	DrawColorSystem(graddCIP, graddCIP_out);
+	DrawColorSystem(gradmCIP, graddCIP, gradfCIP_out);
+
+	string gradmCIP_outfile = filepath + "\\" + infilename + "_12.1_CIPM.png";			//去除孤立點(幅值)
+	imwrite(gradmCIP_outfile, gradmCIP_out);
+	string graddCIP_outfile = filepath + "\\" + infilename + "_12.2_CIPD.png";			//去除孤立點(方向)
+	imwrite(graddCIP_outfile, graddCIP_out);
+	string gradfCIP_outfile = filepath + "\\" + infilename + "_12.3_CIPF.png";			//去除孤立點(場)
+	imwrite(gradfCIP_outfile, gradfCIP_out);
 
 	/*二值化*/
 
 	Mat lineHT;		//二值化(8UC1(BW))
-	threshold(gradmHC, lineHT, 1, 255, THRESH_BINARY);
+	threshold(gradmCIP, lineHT, 1, 255, THRESH_BINARY);
 
 	string LHT_outfile = filepath + "\\" + infilename + "_13_BW.png";					//二值化(二值)
 	imwrite(LHT_outfile, lineHT);
@@ -271,7 +271,7 @@ int main()
 	/*對稱端點連通*/
 
 	Mat gradmSCL, graddSCL, lineSCL;			//短對稱端點連通(8UC1、32FC1)
-	BWConnectLine(gradmHC, graddHC, lineHT, gradmSCL, graddSCL, lineSCL, 2, 5, 60, 0, 1);
+	BWConnectLine(gradmCIP, graddCIP, lineHT, gradmSCL, graddSCL, lineSCL, 2, 5, 60, 0, 1);
 
 	Mat gradmSCL_out, graddSCL_out, gradfSCL_out;		//輸出用(8UC1、8UC3、8UC3)
 	DrawAbsGraySystem(gradmSCL, gradmSCL_out);
@@ -359,6 +359,13 @@ int main()
 	imwrite(objectDT_outfile, objectDT_out);
 
 	/*分水嶺演算法切割*/
+
+	Mat watershedL;		//分水嶺演算法切割(32SC1(BW))
+	int num = bwlabel(fillBW, watershedL, 4);
+	watershed(srcImage, watershedL);
+
+	string watershedL_outfile = filepath + "\\" + infilename + "_20_WATERSHED.png";			//分水嶺演算法切割(標籤)
+	imwrite(watershedL_outfile, watershedL);
 
 	return 0;
 }
