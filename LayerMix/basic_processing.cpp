@@ -2207,7 +2207,7 @@ void BWCombine(InputArray _bwArea, InputArray _bwLine, OutputArray _edge, bool f
 }
 
 /*反轉二值圖*/
-void BWCombine(InputArray _bwImage, OutputArray _bwImageR)
+void BWReverse(InputArray _bwImage, OutputArray _bwImageR)
 {
 	Mat bwImage = _bwImage.getMat();
 	CV_Assert(bwImage.type() == CV_8UC1);

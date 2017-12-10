@@ -133,4 +133,4 @@ void BWConnectLine(InputArray _gradm, InputArray _gradd, InputArray _bwLine, Out
 void BWCombine(InputArray _bwArea, InputArray _bwLine, OutputArray _edge, bool flag = 0);
 
 /*反轉二值圖*/
-void BWCombine(InputArray _bwImage, OutputArray _bwImageR);
+void BWReverse(InputArray _bwImage, OutputArray _bwImageR);
