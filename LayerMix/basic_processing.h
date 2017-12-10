@@ -9,7 +9,7 @@ using namespace cv;
 /*尋找根結點*/
 int findroot(int labeltable[], int label);
 
-/*尋找連通線*/
+/*尋找連通物*/
 int bwlabel(InputArray _binaryImg, OutputArray _labels, int nears);
 
 /*判斷點的類型*/
@@ -134,3 +134,6 @@ void BWCombine(InputArray _bwArea, InputArray _bwLine, OutputArray _edge, bool f
 
 /*反轉二值圖*/
 void BWReverse(InputArray _bwImage, OutputArray _bwImageR);
+
+/*分水嶺演算法*/
+void BWWatershed(InputArray _srcImage, InputArray _bwSeed, InputArray _bwObject, OutputArray _bwWatershed);

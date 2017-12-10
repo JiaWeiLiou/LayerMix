@@ -37,7 +37,7 @@ int findroot(int labeltable[], int label)
 	return x;
 }
 
-/*尋找連通線*/
+/*尋找連通物*/
 int bwlabel(InputArray _binaryImg, OutputArray _labels, int nears)
 {
 	Mat binaryImg = _binaryImg.getMat();
@@ -2219,4 +2219,39 @@ void BWReverse(InputArray _bwImage, OutputArray _bwImageR)
 		for (int j = 0; j < bwImage.cols; ++j)
 			if (bwImage.at<uchar>(i, j) == 0) { bwImageR.at<uchar>(i, j) = 255; }
 			else { bwImage.at<uchar>(i, j) = 0; }
+}
+
+/*分水嶺演算法*/
+void BWWatershed(InputArray _srcImage, InputArray _bwSeed, InputArray _bwObject, OutputArray _bwWatershed)
+{
+	Mat srcImage = _srcImage.getMat();
+	CV_Assert(srcImage.type() == CV_8UC1 || srcImage.type() == CV_8UC3);
+	if (srcImage.type() == CV_8UC1) { cvtColor(srcImage, srcImage, CV_GRAY2BGR); }
+
+	Mat bwSeed = _bwSeed.getMat();
+	CV_Assert(bwSeed.type() == CV_8UC1);
+
+	Mat bwObject = _bwObject.getMat();
+	CV_Assert(bwObject.type() == CV_8UC1);
+
+	_bwWatershed.create(srcImage.size(), CV_8UC1);
+	Mat bwWatershed = _bwWatershed.getMat();
+	bwObject.copyTo(bwWatershed);
+
+	Mat seedLabels;
+	int num = bwlabel(bwSeed, seedLabels, 4);
+
+	Mat label(seedLabels.rows, seedLabels.cols, CV_32SC1);
+
+	seedLabels.copyTo(label);
+
+	for (int i = 0; i < bwObject.rows; ++i)
+		for (int j = 0; j < bwObject.cols; ++j)
+			if (bwObject.at<uchar>(i, j) == 0) { label.at<int>(i, j) = -1; }
+
+	watershed(srcImage, label);
+
+	for (int i = 0; i < label.rows; ++i)
+		for (int j = 0; j < label.cols; ++j)
+			if (label.at<int>(i, j) == -1) { bwWatershed.at<uchar>(i, j) = 0; }
 }
