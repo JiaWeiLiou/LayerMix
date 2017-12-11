@@ -329,7 +329,7 @@ int main()
 	/*滯後閥值*/
 
 	Mat bwL;		//二值化(8UC1(BW))
-	HysteresisThreshold(gradmCIP, bwL, 100, 50);
+	HysteresisThreshold(gradmCIP, bwL, 75, 10);
 
 	string bwL_file = filepath + "\\" + infilename + "_13_LINE(BW).png";				//滯後閥值(二值)
 	imwrite(bwL_file, bwL);
