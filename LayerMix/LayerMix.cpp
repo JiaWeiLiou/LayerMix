@@ -409,11 +409,14 @@ int main()
 	Mat dtBW;		//距離轉換(32FC1(BW))
 	distanceTransform(combineBW, dtBW, CV_DIST_L2, 3);
 
-	Mat dt_out;		//輸出用(8UC1)
+	Mat dt_out,dt_BR_out;		//輸出用(8UC1)
 	DrawAbsGraySystem(dtBW, dt_out);
+	DrawColorBar(dt_out, dt_BR_out);
 
-	string dt_file = filepath + "\\" + infilename + "_16_DT.png";					//距離轉換(灰階)
+	string dt_file = filepath + "\\" + infilename + "_16.0_DT.png";					//距離轉換(灰階)
 	imwrite(dt_file, dt_out);
+	string dt_BR_file = filepath + "\\" + infilename + "_16.1_DT(BR).png";					//距離轉換(藍紅)
+	imwrite(dt_BR_file, dt_BR_out);
 
 	/*分水嶺演算法切割*/
 
