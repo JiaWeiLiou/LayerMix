@@ -2,7 +2,6 @@
 #include "basic_processing.h"
 
 /*生成二維高斯核*/
-
 Mat gaussian_kernal(int size, int sigma)
 {
 	if (size % 2 == 0) { --size; }
